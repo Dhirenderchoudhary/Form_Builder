@@ -88,6 +88,7 @@ export function AddFieldPopover({
             <input
               autoFocus
               type="text"
+              aria-label="Search field types"
               placeholder="Search field types…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

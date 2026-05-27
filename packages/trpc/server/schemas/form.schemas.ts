@@ -36,6 +36,21 @@ export const fieldOptionSchema = z.object({
   imageUrl: z.string().url().optional(),
 });
 
+export const conditionalLogicSchema = z
+  .object({
+    action: z.enum(["show", "hide"]),
+    conditions: z.array(
+      z.object({
+        fieldId: z.string().uuid(),
+        operator: z.enum(["equals", "not_equals", "contains", "is_empty", "is_not_empty"]),
+        value: z.string().optional(),
+      }),
+    ),
+    logicOperator: z.enum(["and", "or"]),
+  })
+  .nullable()
+  .optional();
+
 export const formSettingsSchema = z
   .object({
     showProgressBar: z.boolean().optional(),
@@ -49,14 +64,25 @@ export const formSettingsSchema = z
 export const createFormSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().max(2000).optional(),
+  slug: z
+    .string()
+    .min(1)
+    .max(255)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens")
+    .optional(),
   visibility: z.enum(["public", "unlisted"]).default("unlisted"),
   themeId: uuidSchema.optional(),
   settings: formSettingsSchema,
   collectEmail: z.boolean().default(false),
   successMessage: z.string().max(1000).optional(),
   redirectUrl: z.string().url().optional(),
-  maxResponses: z.number().int().positive().optional(),
-  closesAt: z.string().datetime().optional().transform((v) => (v ? new Date(v) : undefined)),
+  maxResponses: z.number().int().positive().nullable().optional(),
+  closesAt: z
+    .string()
+    .datetime()
+    .nullable()
+    .optional()
+    .transform((v) => (v ? new Date(v) : v === null ? null : undefined)),
 });
 
 export const updateFormSchema = createFormSchema.partial();
@@ -73,6 +99,10 @@ export const createFieldSchema = z.object({
   maxValue: z.number().int().optional(),
   minLabel: z.string().max(100).optional(),
   maxLabel: z.string().max(100).optional(),
+  conditionalLogic: conditionalLogicSchema,
+  pageBreak: z.boolean().optional(),
+  pageTitle: z.string().max(255).optional(),
+  pageDescription: z.string().max(1000).optional(),
 });
 
 export const updateFieldSchema = createFieldSchema.partial();

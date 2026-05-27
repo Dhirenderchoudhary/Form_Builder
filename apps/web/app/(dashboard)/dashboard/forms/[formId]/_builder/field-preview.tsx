@@ -18,6 +18,7 @@ export function FieldPreview({ field }: { field: BuilderField }) {
     case "url":
       return (
         <input
+          aria-label={field.label || "Short text field"}
           type={
             field.type === "email"
               ? "email"
@@ -36,6 +37,7 @@ export function FieldPreview({ field }: { field: BuilderField }) {
     case "number":
       return (
         <input
+          aria-label={field.label || "Number field"}
           type="number"
           placeholder={field.placeholder ?? "0"}
           className={baseInput}
@@ -46,6 +48,7 @@ export function FieldPreview({ field }: { field: BuilderField }) {
     case "long_text":
       return (
         <textarea
+          aria-label={field.label || "Long text field"}
           rows={4}
           placeholder={field.placeholder ?? ""}
           className="w-full min-h-[100px] rounded-md border border-konoha-forest/60 bg-konoha-ink/60 px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/60"
@@ -54,15 +57,15 @@ export function FieldPreview({ field }: { field: BuilderField }) {
       );
 
     case "date":
-      return <input type="date" className={baseInput} disabled />;
+      return <input aria-label={field.label || "Date field"} type="date" className={baseInput} disabled />;
 
     case "time":
-      return <input type="time" className={baseInput} disabled />;
+      return <input aria-label={field.label || "Time field"} type="time" className={baseInput} disabled />;
 
     case "select": {
       const opts = field.options ?? [];
       return (
-        <select className={baseInput} disabled defaultValue="">
+        <select aria-label={field.label || "Select field"} className={baseInput} disabled defaultValue="">
           <option value="" disabled>
             Choose one…
           </option>

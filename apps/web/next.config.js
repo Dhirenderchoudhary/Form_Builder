@@ -11,7 +11,7 @@ const nextConfig = {
 
   // Packages that use Node.js APIs (pg, drizzle) need to be external
   // so they run in Node.js runtime, not edge
-  serverExternalPackages: ["pg", "drizzle-orm"],
+  serverExternalPackages: ["pg", "drizzle-orm", "resend"],
 };
 
 export default nextConfig;

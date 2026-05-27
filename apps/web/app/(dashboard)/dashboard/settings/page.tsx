@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import Image from "next/image";
 import { useUser, useClerk } from "@clerk/nextjs";
 import {
   User as UserIcon,
@@ -9,6 +10,8 @@ import {
   LogOut,
   ExternalLink,
   Bell,
+  ScrollText,
+  Inbox,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { KakashiSilhouette } from "@/components/konoha/characters";
@@ -74,9 +77,11 @@ export default function AccountSettingsPage() {
 
             <div className="flex items-start gap-4">
               {user?.imageUrl ? (
-                <img
+                <Image
                   src={user.imageUrl}
                   alt={fullName}
+                  width={64}
+                  height={64}
                   className="h-16 w-16 shrink-0 rounded-full border-2 border-konoha-orange/40 object-cover"
                 />
               ) : (
@@ -131,8 +136,10 @@ export default function AccountSettingsPage() {
           <NotificationsCard />
         </div>
 
-        {/* Side column — sign out */}
+        {/* Side column — stats + sign out */}
         <aside className="flex flex-col gap-4">
+          <AccountStatsCard />
+
           <section className="scroll-card p-6">
             <header className="mb-3 flex items-center gap-2">
               <LogOut className="h-3.5 w-3.5 text-konoha-akatsuki" />
@@ -210,30 +217,32 @@ function NotificationToggle({
   storageKey: string;
   defaultValue: boolean;
 }) {
-  const [enabled, setEnabled] = useState(defaultValue);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored !== null) setEnabled(stored === "true");
-    } catch {
-      // ignore — SSR or restricted storage
-    }
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const enabled = useSyncExternalStore(
+    (onChange) => {
+      const handler = (e: StorageEvent) => {
+        if (e.key === storageKey) onChange();
+      };
+      window.addEventListener("storage", handler);
+      return () => window.removeEventListener("storage", handler);
+    },
+    () => {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored !== null) return stored === "true";
+      } catch {}
+      return defaultValue;
+    },
+    () => defaultValue,
+  );
 
   const toggle = () => {
-    setEnabled((v) => {
-      const next = !v;
-      try {
-        localStorage.setItem(storageKey, String(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
+    const next = !enabled;
+    try {
+      localStorage.setItem(storageKey, String(next));
+    } catch {
+      // ignore
+    }
+    window.dispatchEvent(new StorageEvent("storage", { key: storageKey }));
   };
 
   return (
@@ -248,9 +257,8 @@ function NotificationToggle({
         type="button"
         role="switch"
         aria-checked={enabled}
-        disabled={!hydrated}
         onClick={toggle}
-        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
           enabled
             ? "bg-konoha-orange shadow-[0_0_10px_rgba(255,107,0,0.4)]"
             : "bg-konoha-forest"
@@ -263,5 +271,46 @@ function NotificationToggle({
         />
       </button>
     </div>
+  );
+}
+
+function AccountStatsCard() {
+  const { data: forms, isLoading } = trpc.forms.list.useQuery();
+  const formsArr = (forms ?? []) as Array<{ id: string; responseCount: number }>;
+  const totalForms = formsArr.length;
+  const totalResponses = formsArr.reduce((acc, f) => acc + (f.responseCount ?? 0), 0);
+
+  return (
+    <section className="scroll-card p-6">
+      <header className="mb-4 flex items-center gap-2">
+        <ScrollText className="h-3.5 w-3.5 text-konoha-orange" />
+        <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em]">
+          Your Village Stats
+        </h2>
+      </header>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Total Scrolls</span>
+          {isLoading ? (
+            <div className="h-5 w-8 animate-pulse rounded bg-konoha-forest/30" />
+          ) : (
+            <span className="font-heading text-lg font-black tabular-nums text-konoha-orange">
+              {totalForms}
+            </span>
+          )}
+        </div>
+        <div className="h-px bg-konoha-forest/40" />
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Total Responses</span>
+          {isLoading ? (
+            <div className="h-5 w-8 animate-pulse rounded bg-konoha-forest/30" />
+          ) : (
+            <span className="font-heading text-lg font-black tabular-nums text-konoha-orange">
+              {totalResponses}
+            </span>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

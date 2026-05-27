@@ -1,9 +1,11 @@
 "use client";
 
-import { ScrollText, Palette } from "lucide-react";
+import { useState } from "react";
+import { ScrollText, Palette, Clock, Hash, AlertCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import type { BuilderForm } from "./types";
 import { PasswordSection } from "./password-section";
+import { QrCodeSection } from "./qr-code-section";
 
 interface Props {
   form: BuilderForm;
@@ -27,9 +29,39 @@ interface AvailableTheme {
   colors: { primary: string; accent: string };
 }
 
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 export function FormSettings({ form, onChange }: Props) {
   const themesQuery = trpc.explore.listThemes.useQuery();
   const themes = (themesQuery.data ?? []) as AvailableTheme[];
+
+  const [slugError, setSlugError] = useState<string | null>(null);
+
+  const handleSlugChange = (raw: string) => {
+    // Auto-sanitize: lowercase, replace spaces with hyphens, strip invalid chars
+    const sanitized = raw
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    setSlugError(null);
+    if (sanitized && !SLUG_REGEX.test(sanitized)) {
+      setSlugError("Use only lowercase letters, numbers, and hyphens");
+    }
+    onChange({ slug: sanitized });
+  };
+
+  // Format closesAt for datetime-local input
+  const closesAtValue = (() => {
+    if (!form.closesAt) return "";
+    const d = typeof form.closesAt === "string" ? new Date(form.closesAt) : form.closesAt;
+    // Convert to local datetime string for input
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  })();
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -87,6 +119,101 @@ export function FormSettings({ form, onChange }: Props) {
         onChange={(v) => onChange({ collectEmail: v })}
       />
 
+      {/* ──── Custom Slug ──── */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className={labelCls}>Custom Slug</span>
+          <span className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+            <Hash className="h-3 w-3" />
+            URL path
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-xs text-muted-foreground">/f/</span>
+          <input
+            className={`${inputCls} font-mono`}
+            value={form.slug}
+            placeholder="my-form-slug"
+            onChange={(e) => handleSlugChange(e.target.value)}
+          />
+        </div>
+        {slugError && (
+          <p className="flex items-center gap-1 text-[11px] text-konoha-akatsuki">
+            <AlertCircle className="h-3 w-3" />
+            {slugError}
+          </p>
+        )}
+        <p className="text-[10px] text-muted-foreground/70">
+          Changing the slug will break existing links to this scroll.
+        </p>
+      </div>
+
+      {/* ──── Response Limit ──── */}
+      <div className="flex flex-col gap-3 rounded-md border border-konoha-forest/40 bg-konoha-ink/30 p-3">
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-konoha-orange/80" />
+          <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-konoha-orange/80">
+            Expiry & Limits
+          </span>
+        </div>
+
+        <label className="flex flex-col gap-2">
+          <span className={labelCls}>Max responses</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              className={inputCls}
+              value={form.maxResponses ?? ""}
+              placeholder="Unlimited"
+              onChange={(e) => {
+                const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                onChange({ maxResponses: val && val > 0 ? val : null });
+              }}
+            />
+            {form.maxResponses && (
+              <button
+                type="button"
+                onClick={() => onChange({ maxResponses: null })}
+                className="shrink-0 text-[9px] uppercase tracking-[0.2em] text-konoha-akatsuki hover:text-konoha-akatsuki/80"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70">
+            Stop accepting responses after this many submissions.
+          </p>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className={labelCls}>Closes at</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="datetime-local"
+              className={`${inputCls} text-xs`}
+              value={closesAtValue}
+              onChange={(e) => {
+                const val = e.target.value ? new Date(e.target.value).toISOString() : null;
+                onChange({ closesAt: val });
+              }}
+            />
+            {form.closesAt && (
+              <button
+                type="button"
+                onClick={() => onChange({ closesAt: null })}
+                className="shrink-0 text-[9px] uppercase tracking-[0.2em] text-konoha-akatsuki hover:text-konoha-akatsuki/80"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70">
+            Automatically seal the scroll after this date.
+          </p>
+        </label>
+      </div>
+
       {/* Theme picker */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -122,19 +249,12 @@ export function FormSettings({ form, onChange }: Props) {
         </div>
       </div>
 
-      <div className="rounded-md border border-konoha-forest/40 bg-konoha-ink/30 p-3">
-        <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
-          Public link
-        </p>
-        <p className="mt-1.5 truncate font-mono text-xs text-konoha-orange">
-          /f/{form.slug}
-        </p>
-      </div>
-
       <PasswordSection
         formId={form.id}
         hasPassword={!!form.settings?.passwordHash}
       />
+
+      <QrCodeSection formId={form.id} slug={form.slug} />
     </div>
   );
 }

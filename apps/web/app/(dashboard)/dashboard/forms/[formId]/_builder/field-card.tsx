@@ -1,6 +1,6 @@
 "use client";
 
-import { GripVertical, Copy, Trash2 } from "lucide-react";
+import { GripVertical, Copy, Trash2, GitBranch, SplitSquareHorizontal } from "lucide-react";
 import { getFieldDef } from "./field-catalog";
 import { FieldPreview } from "./field-preview";
 import type { BuilderField } from "./types";
@@ -38,6 +38,20 @@ export function FieldCard({
 
   return (
     <div className="relative" onDragOver={onDragOver} onDrop={onDrop}>
+      {/* Page break divider */}
+      {field.pageBreak && (
+        <div className="mb-3 flex items-center gap-2">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-konoha-orange/50 to-transparent" />
+          <div className="flex items-center gap-1.5 rounded-full border border-konoha-orange/40 bg-konoha-orange/10 px-3 py-1">
+            <SplitSquareHorizontal className="h-3 w-3 text-konoha-orange" />
+            <span className="text-[9px] font-medium uppercase tracking-[0.25em] text-konoha-orange">
+              {field.pageTitle || "New Page"}
+            </span>
+          </div>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-konoha-orange/50 to-transparent" />
+        </div>
+      )}
+
       {/* Drop indicator above */}
       {isDropTarget === "above" && (
         <div className="absolute -top-1 left-0 right-0 h-0.5 rounded bg-konoha-orange shadow-[0_0_12px_#FF6B00]" />
@@ -85,6 +99,14 @@ export function FieldCard({
               {field.required && (
                 <span className="text-konoha-orange" title="Required">
                   ✦
+                </span>
+              )}
+              {field.conditionalLogic && field.conditionalLogic.conditions.length > 0 && (
+                <span className="flex items-center gap-0.5 rounded-full border border-konoha-forest/40 bg-konoha-ink/60 px-1.5 py-0.5" title="Has conditional logic">
+                  <GitBranch className="h-2.5 w-2.5 text-konoha-chakra" />
+                  <span className="text-[8px] uppercase tracking-[0.15em] text-konoha-chakra">
+                    {field.conditionalLogic.action}
+                  </span>
                 </span>
               )}
             </div>

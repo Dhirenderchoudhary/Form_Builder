@@ -34,6 +34,16 @@ export interface FieldValidations {
   patternMessage?: string;
 }
 
+export interface ConditionalLogic {
+  action: "show" | "hide";
+  conditions: Array<{
+    fieldId: string;
+    operator: "equals" | "not_equals" | "contains" | "is_empty" | "is_not_empty";
+    value?: string;
+  }>;
+  logicOperator: "and" | "or";
+}
+
 export interface BuilderField {
   id: string;
   formId: string;
@@ -49,6 +59,10 @@ export interface BuilderField {
   maxValue: number | null;
   minLabel: string | null;
   maxLabel: string | null;
+  conditionalLogic: ConditionalLogic | null;
+  pageBreak: boolean;
+  pageTitle: string | null;
+  pageDescription: string | null;
 }
 
 export interface BuilderForm {
@@ -62,6 +76,8 @@ export interface BuilderForm {
   collectEmail: boolean;
   publishedAt: string | Date | null;
   themeId: string | null;
+  maxResponses: number | null;
+  closesAt: string | Date | null;
   settings: {
     showProgressBar?: boolean;
     shuffleFields?: boolean;

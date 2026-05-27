@@ -99,6 +99,22 @@ export const formsRouter = router({
       return { success: true };
     }),
 
+  clone: protectedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: getPath("/{formId}/clone"),
+        tags: TAGS,
+        summary: "Clone a form with all its fields",
+        protect: true,
+      },
+    })
+    .input(z.object({ formId: uuidSchema }))
+    .output(z.any())
+    .mutation(async ({ ctx, input }) => {
+      return formService.cloneForm(input.formId, ctx.auth.userId);
+    }),
+
   publish: protectedProcedure
     .meta({
       openapi: {

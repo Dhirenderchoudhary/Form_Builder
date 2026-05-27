@@ -43,14 +43,14 @@ export function Builder({ formId }: Props) {
   const [rightPane, setRightPane] = useState<RightPane>("settings");
   const [previewMode, setPreviewMode] = useState(false);
   const [mobileTab, setMobileTab] = useState<"canvas" | "inspector">("canvas");
-  const [savingField, setSavingField] = useState<Record<string, boolean>>({});
+  const savingFieldRef = useRef<Record<string, boolean>>({});
   const [savingForm, setSavingForm] = useState(false);
 
-  // Hydrate local state once the query resolves
-  useEffect(() => {
-    if (!serverForm) return;
-    setForm(serverForm as BuilderForm);
-  }, [serverForm]);
+  const prevServerForm = useRef(serverForm);
+  if (serverForm !== prevServerForm.current) {
+    prevServerForm.current = serverForm;
+    if (serverForm) setForm(serverForm as BuilderForm);
+  }
 
   const selectedField = useMemo(
     () => form?.fields.find((f) => f.id === selectedFieldId) ?? null,
@@ -79,9 +79,11 @@ export function Builder({ formId }: Props) {
   const updateFieldMutation = trpc.forms.updateField.useMutation({
     onSettled: async (_data, _err, vars) => {
       if (vars?.fieldId) {
-        setSavingField((s) => ({ ...s, [vars.fieldId]: false }));
+        savingFieldRef.current = { ...savingFieldRef.current, [vars.fieldId]: false };
       }
-      await utils.forms.get.invalidate({ formId });
+      // We intentionally do NOT invalidate the query here to prevent the UI
+      // from janking or losing focus when a background save completes.
+      // The optimistic state in setForm is sufficient.
     },
     onError: (err) => {
       toast.push({
@@ -122,7 +124,8 @@ export function Builder({ formId }: Props) {
   const updateFormMutation = trpc.forms.update.useMutation({
     onSettled: async () => {
       setSavingForm(false);
-      await utils.forms.get.invalidate({ formId });
+      // We intentionally do NOT invalidate forms.get here to prevent 
+      // the UI from janking/reverting when a background save completes.
       await utils.forms.list.invalidate();
     },
     onError: (err) => {
@@ -167,6 +170,9 @@ export function Builder({ formId }: Props) {
 
   // ---------------------- Field operations ----------------------
 
+  const fieldDebounceRefs = useRef<Record<string, number>>({});
+  const pendingFieldPatches = useRef<Record<string, Partial<BuilderField>>>({});
+
   const handleAddField = (type: FieldType) => {
     const defaults = getFieldDefaults(type);
     addFieldMutation.mutate({
@@ -185,7 +191,7 @@ export function Builder({ formId }: Props) {
   };
 
   const handleFieldChange = (fieldId: string, patch: Partial<BuilderField>) => {
-    // Optimistic UI — update local state, then send the patch.
+    // Optimistic UI — update local state
     setForm((prev) => {
       if (!prev) return prev;
       return {
@@ -195,26 +201,48 @@ export function Builder({ formId }: Props) {
         ),
       };
     });
-    setSavingField((s) => ({ ...s, [fieldId]: true }));
+    savingFieldRef.current = { ...savingFieldRef.current, [fieldId]: true };
 
-    // Strip server-managed fields and only send what changed
-    const payload: Record<string, unknown> = {
-      formId,
-      fieldId,
+    // Accumulate patches for this field
+    pendingFieldPatches.current[fieldId] = {
+      ...(pendingFieldPatches.current[fieldId] || {}),
+      ...patch,
     };
-    if (patch.label !== undefined) payload.label = patch.label;
-    if (patch.placeholder !== undefined) payload.placeholder = patch.placeholder ?? undefined;
-    if (patch.helpText !== undefined) payload.helpText = patch.helpText ?? undefined;
-    if (patch.required !== undefined) payload.required = patch.required;
-    if (patch.options !== undefined) payload.options = patch.options ?? undefined;
-    if (patch.validations !== undefined) payload.validations = patch.validations ?? {};
-    if (patch.minValue !== undefined) payload.minValue = patch.minValue ?? undefined;
-    if (patch.maxValue !== undefined) payload.maxValue = patch.maxValue ?? undefined;
-    if (patch.minLabel !== undefined) payload.minLabel = patch.minLabel ?? undefined;
-    if (patch.maxLabel !== undefined) payload.maxLabel = patch.maxLabel ?? undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateFieldMutation.mutate(payload as any);
+    if (fieldDebounceRefs.current[fieldId]) {
+      window.clearTimeout(fieldDebounceRefs.current[fieldId]);
+    }
+
+    fieldDebounceRefs.current[fieldId] = window.setTimeout(() => {
+      const accumulatedPatch = pendingFieldPatches.current[fieldId];
+      if (!accumulatedPatch) return;
+
+      const payload: Record<string, unknown> = {
+        formId,
+        fieldId,
+      };
+      
+      if (accumulatedPatch.label !== undefined) payload.label = accumulatedPatch.label;
+      if (accumulatedPatch.placeholder !== undefined) payload.placeholder = accumulatedPatch.placeholder ?? undefined;
+      if (accumulatedPatch.helpText !== undefined) payload.helpText = accumulatedPatch.helpText ?? undefined;
+      if (accumulatedPatch.required !== undefined) payload.required = accumulatedPatch.required;
+      if (accumulatedPatch.options !== undefined) payload.options = accumulatedPatch.options ?? undefined;
+      if (accumulatedPatch.validations !== undefined) payload.validations = accumulatedPatch.validations ?? {};
+      if (accumulatedPatch.minValue !== undefined) payload.minValue = accumulatedPatch.minValue ?? undefined;
+      if (accumulatedPatch.maxValue !== undefined) payload.maxValue = accumulatedPatch.maxValue ?? undefined;
+      if (accumulatedPatch.minLabel !== undefined) payload.minLabel = accumulatedPatch.minLabel ?? undefined;
+      if (accumulatedPatch.maxLabel !== undefined) payload.maxLabel = accumulatedPatch.maxLabel ?? undefined;
+      if (accumulatedPatch.conditionalLogic !== undefined) payload.conditionalLogic = accumulatedPatch.conditionalLogic;
+      if (accumulatedPatch.pageBreak !== undefined) payload.pageBreak = accumulatedPatch.pageBreak;
+      if (accumulatedPatch.pageTitle !== undefined) payload.pageTitle = accumulatedPatch.pageTitle ?? undefined;
+      if (accumulatedPatch.pageDescription !== undefined) payload.pageDescription = accumulatedPatch.pageDescription ?? undefined;
+
+      // Clear the pending patch
+      pendingFieldPatches.current[fieldId] = {};
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      updateFieldMutation.mutate(payload as any);
+    }, 600);
   };
 
   const handleDuplicateField = (field: BuilderField) => {
@@ -232,6 +260,10 @@ export function Builder({ formId }: Props) {
       maxValue: field.maxValue ?? defaults.maxValue,
       minLabel: field.minLabel ?? defaults.minLabel,
       maxLabel: field.maxLabel ?? defaults.maxLabel,
+      conditionalLogic: field.conditionalLogic ?? undefined,
+      pageBreak: field.pageBreak ?? false,
+      pageTitle: field.pageTitle ?? undefined,
+      pageDescription: field.pageDescription ?? undefined,
     });
   };
 
@@ -247,26 +279,71 @@ export function Builder({ formId }: Props) {
     deleteFieldMutation.mutate({ formId, fieldId });
   };
 
+  // ---------------------- Keyboard Shortcuts ----------------------
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+S or Ctrl+S
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        toast.push({
+          variant: "success",
+          title: "Progress saved",
+          message: "We autosave your work constantly.",
+        });
+      }
+
+      // Delete selected field
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedFieldId) {
+        if (
+          document.activeElement?.tagName === "INPUT" ||
+          document.activeElement?.tagName === "TEXTAREA" ||
+          document.activeElement?.tagName === "SELECT" ||
+          (document.activeElement as HTMLElement)?.isContentEditable
+        ) {
+          return;
+        }
+        e.preventDefault();
+        handleDeleteField(selectedFieldId);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedFieldId, toast]);
+
   // ---------------------- Form-level autosave ----------------------
 
   const formDebounceRef = useRef<number | null>(null);
+  const pendingFormPatch = useRef<Partial<BuilderForm>>({});
 
   const handleFormChange = (patch: Partial<BuilderForm>) => {
     setForm((prev) => (prev ? { ...prev, ...patch } : prev));
     setSavingForm(true);
+
+    pendingFormPatch.current = { ...pendingFormPatch.current, ...patch };
 
     if (formDebounceRef.current) {
       window.clearTimeout(formDebounceRef.current);
     }
 
     formDebounceRef.current = window.setTimeout(() => {
+      const accumulatedPatch = pendingFormPatch.current;
       const payload: Record<string, unknown> = { formId };
-      if (patch.title !== undefined) payload.title = patch.title;
-      if (patch.description !== undefined) payload.description = patch.description ?? undefined;
-      if (patch.visibility !== undefined) payload.visibility = patch.visibility;
-      if (patch.collectEmail !== undefined) payload.collectEmail = patch.collectEmail;
-      if (patch.successMessage !== undefined) payload.successMessage = patch.successMessage ?? undefined;
-      if (patch.themeId !== undefined) payload.themeId = patch.themeId ?? null;
+      
+      if (accumulatedPatch.title !== undefined) payload.title = accumulatedPatch.title;
+      if (accumulatedPatch.description !== undefined) payload.description = accumulatedPatch.description ?? undefined;
+      if (accumulatedPatch.visibility !== undefined) payload.visibility = accumulatedPatch.visibility;
+      if (accumulatedPatch.collectEmail !== undefined) payload.collectEmail = accumulatedPatch.collectEmail;
+      if (accumulatedPatch.successMessage !== undefined) payload.successMessage = accumulatedPatch.successMessage ?? undefined;
+      if (accumulatedPatch.themeId !== undefined) payload.themeId = accumulatedPatch.themeId ?? null;
+      if (accumulatedPatch.slug !== undefined) payload.slug = accumulatedPatch.slug;
+      if (accumulatedPatch.maxResponses !== undefined) payload.maxResponses = accumulatedPatch.maxResponses;
+      if (accumulatedPatch.closesAt !== undefined) {
+        payload.closesAt = accumulatedPatch.closesAt ? (typeof accumulatedPatch.closesAt === 'string' ? accumulatedPatch.closesAt : (accumulatedPatch.closesAt as Date).toISOString()) : null;
+      }
+      
+      pendingFormPatch.current = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       updateFormMutation.mutate(payload as any);
     }, 600);
@@ -339,10 +416,40 @@ export function Builder({ formId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex items-center gap-3 text-sm uppercase tracking-[0.25em] text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-konoha-orange" />
-          Unsealing scroll…
+      <div className="-mx-4 -my-6 flex min-h-[calc(100vh-4rem)] flex-col md:-mx-8 md:-my-10 animate-pulse">
+        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-3 border-b border-konoha-forest/40 bg-konoha-ink/80 px-4 py-3 md:px-8">
+          <div className="h-4 w-16 bg-konoha-forest/20 rounded"></div>
+          <div className="hidden h-4 w-px bg-konoha-forest/60 sm:block"></div>
+          <div className="h-6 w-32 bg-konoha-forest/20 rounded"></div>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="h-9 w-24 bg-konoha-forest/20 rounded-md"></div>
+            <div className="h-9 w-9 bg-konoha-forest/20 rounded-md"></div>
+          </div>
+        </div>
+        <div className="flex flex-1">
+          <div className="hidden w-[280px] border-r border-konoha-forest/40 p-4 md:block xl:w-[320px]">
+            <div className="space-y-4">
+              <div className="h-8 w-24 bg-konoha-forest/20 rounded mb-6"></div>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-12 bg-konoha-forest/10 rounded border border-konoha-forest/20"></div>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 p-4 md:p-8">
+            <div className="mx-auto max-w-2xl space-y-4">
+              <div className="h-32 bg-konoha-forest/10 rounded-xl border border-konoha-forest/20"></div>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-konoha-forest/10 rounded-xl border border-konoha-forest/20"></div>
+              ))}
+            </div>
+          </div>
+          <div className="hidden w-[320px] border-l border-konoha-forest/40 p-4 lg:block">
+            <div className="h-8 w-32 bg-konoha-forest/20 rounded mb-6"></div>
+            <div className="space-y-4">
+              <div className="h-10 bg-konoha-forest/10 rounded"></div>
+              <div className="h-20 bg-konoha-forest/10 rounded"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -567,6 +674,7 @@ export function Builder({ formId }: Props) {
               {rightPane === "field" && selectedField ? (
                 <FieldInspector
                   field={selectedField}
+                  allFields={form.fields}
                   onChange={(patch) => handleFieldChange(selectedField.id, patch)}
                 />
               ) : rightPane === "field" ? (

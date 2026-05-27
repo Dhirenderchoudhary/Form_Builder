@@ -43,6 +43,7 @@ export function FieldRenderer({
               : "text";
       return (
         <input
+          aria-label={field.label || "Text input"}
           type={inputType}
           className={cls}
           value={(value as string) ?? ""}
@@ -59,6 +60,7 @@ export function FieldRenderer({
     case "number":
       return (
         <input
+          aria-label={field.label || "Number input"}
           type="number"
           className={cls}
           value={value === null || value === undefined ? "" : (value as number)}
@@ -76,6 +78,7 @@ export function FieldRenderer({
     case "long_text":
       return (
         <textarea
+          aria-label={field.label || "Long text input"}
           rows={4}
           className={`${cls} min-h-[120px] resize-y leading-relaxed`}
           value={(value as string) ?? ""}
@@ -90,6 +93,7 @@ export function FieldRenderer({
     case "date":
       return (
         <input
+          aria-label={field.label || "Date input"}
           type="date"
           className={cls}
           value={(value as string) ?? ""}
@@ -102,6 +106,7 @@ export function FieldRenderer({
     case "time":
       return (
         <input
+          aria-label={field.label || "Time input"}
           type="time"
           className={cls}
           value={(value as string) ?? ""}
@@ -115,6 +120,7 @@ export function FieldRenderer({
       const options = field.options ?? [];
       return (
         <select
+          aria-label={field.label || "Select input"}
           className={`${cls} appearance-none cursor-pointer`}
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
@@ -249,6 +255,7 @@ export function FieldRenderer({
             />
           </div>
           <input
+            aria-label={field.label || "Scale input"}
             type="range"
             min={min}
             max={max}
@@ -279,6 +286,7 @@ export function FieldRenderer({
           }`}
         >
           <input
+            aria-label={field.label || "File upload input"}
             type="file"
             className="sr-only"
             disabled={disabled}

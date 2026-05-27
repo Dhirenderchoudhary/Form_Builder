@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { KonohaLeaf } from "@/components/konoha/leaf";
 import { FieldRenderer } from "./field";
 import { validateAllFields, validateField } from "../_lib/validate";
-import type { PublicForm, AnswerValue } from "../types";
+import { isFieldVisible, splitIntoPages, type FormPage } from "../_lib/conditional";
+import type { PublicForm, PublicField, AnswerValue } from "../types";
 
 interface Props {
   slug: string;
@@ -29,16 +37,17 @@ type LoadState =
  * - Loads form via public.getForm (no auth)
  * - Tracks view on mount, start on first interaction (debounced)
  * - Validates client-side, submits via public.submit
+ * - Supports multi-page forms with page navigation
+ * - Evaluates conditional logic to show/hide fields
  * - Renders themed success state with the form's success message
  */
 export function FormView({ slug }: Props) {
-  const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [values, setValues] = useState<Record<string, AnswerValue>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  /** Password the user has typed once unlocked — re-sent on submit so the seal can't be bypassed. */
   const [password, setPassword] = useState<string | null>(null);
+  const [currentPageIdx, setCurrentPageIdx] = useState(0);
 
   const startedRef = useRef(false);
   const startTimeRef = useRef<number>(Date.now());
@@ -48,54 +57,60 @@ export function FormView({ slug }: Props) {
     password: password ?? undefined,
   });
 
-  useEffect(() => {
-    if (formQuery.isLoading) return;
-
-    if (formQuery.isError) {
-      const msg = formQuery.error?.message ?? "";
-      // The backend signals these via TRPCError code FORBIDDEN with a tagged message.
-      const lower = msg.toLowerCase();
-      if (lower.includes("not accepting")) {
-        setState({ kind: "blocked", reason: "closed", message: msg });
-      } else if (lower.includes("expired")) {
-        setState({ kind: "blocked", reason: "expired", message: msg });
-      } else if (lower.includes("maximum") || lower.includes("full")) {
-        setState({ kind: "blocked", reason: "full", message: msg });
-      } else {
-        setState({ kind: "not-found" });
-      }
-      return;
+  let state: LoadState = { kind: "loading" };
+  if (formQuery.isLoading || formQuery.isFetching) {
+    state = { kind: "loading" };
+  } else if (formQuery.isError) {
+    const msg = formQuery.error?.message ?? "";
+    const lower = msg.toLowerCase();
+    if (lower.includes("not accepting")) {
+      state = { kind: "blocked", reason: "closed", message: msg };
+    } else if (lower.includes("expired")) {
+      state = { kind: "blocked", reason: "expired", message: msg };
+    } else if (lower.includes("maximum") || lower.includes("full")) {
+      state = { kind: "blocked", reason: "full", message: msg };
+    } else {
+      state = { kind: "not-found" };
     }
-
-    if (formQuery.data) {
-      const data = formQuery.data as PublicForm | { passwordRequired: true; title: string; slug: string };
-      // Locked sentinel — backend returned passwordRequired
-      if ("passwordRequired" in data && data.passwordRequired) {
-        setState({
-          kind: "locked",
-          title: data.title,
-          slug: data.slug,
-          // If we already had a password attempt, this means it was wrong.
-          error: password ? "Insufficient chakra — wrong seal." : undefined,
-        });
-        return;
-      }
-      const form = data as PublicForm;
-      setState({ kind: "ok", form });
-      // Initialize default values for sliders so they don't render empty
-      const init: Record<string, AnswerValue> = {};
-      for (const f of form.fields) {
-        if (f.type === "scale") {
-          const min = f.minValue ?? 0;
-          const max = f.maxValue ?? 100;
-          init[f.id] = Math.floor((min + max) / 2);
-        }
-      }
-      setValues(init);
-      startTimeRef.current = Date.now();
+  } else if (formQuery.data) {
+    const data = formQuery.data as PublicForm | { passwordRequired: true; title: string; slug: string };
+    if ("passwordRequired" in data && data.passwordRequired) {
+      state = {
+        kind: "locked",
+        title: data.title,
+        slug: data.slug,
+        error: password ? "Insufficient chakra — wrong seal." : undefined,
+      };
+    } else {
+      state = { kind: "ok", form: data as PublicForm };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formQuery.isLoading, formQuery.isError]);
+  }
+
+  const prevFormId = useRef<string | null>(null);
+  if (state.kind === "ok" && state.form.id !== prevFormId.current) {
+    prevFormId.current = state.form.id;
+    const init: Record<string, AnswerValue> = {};
+    for (const f of state.form.fields) {
+      if (f.type === "scale") {
+        const min = f.minValue ?? 0;
+        const max = f.maxValue ?? 100;
+        init[f.id] = Math.floor((min + max) / 2);
+      }
+    }
+    setValues(init);
+    startTimeRef.current = Date.now();
+  }
+
+  // Compute visible fields and pages
+  const visibleFields = useMemo(() => {
+    if (state.kind !== "ok") return [];
+    return state.form.fields.filter((f) => isFieldVisible(f, values));
+  }, [state.kind === "ok" ? state.form.fields : null, values]);
+
+  const pages = useMemo(() => splitIntoPages(visibleFields), [visibleFields]);
+  const isMultiPage = pages.length > 1;
+  const currentPage = pages[currentPageIdx] ?? pages[0];
+  const isLastPage = currentPageIdx >= pages.length - 1;
 
   // Track view once we know the form ID
   const trackEvent = trpc.public.trackEvent.useMutation();
@@ -123,7 +138,6 @@ export function FormView({ slug }: Props) {
   const submit = trpc.public.submit.useMutation({
     onSuccess: () => {
       setSubmitted(true);
-      // Auto-scroll back to top so the success card is visible
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     },
     onError: (err) => {
@@ -157,14 +171,11 @@ export function FormView({ slug }: Props) {
     if (!theme) return {};
 
     return {
-      // Apply theme colors via the konoha-* CSS custom properties used
-      // throughout the app. This re-skins the page without touching markup.
       ["--background" as string]: hexToHsl(theme.colors.background),
       ["--foreground" as string]: hexToHsl(theme.colors.text),
       backgroundColor: theme.colors.background,
       color: theme.colors.text,
       fontFamily: theme.fonts.body,
-      // Custom props consumed by the styled blocks below
       ["--theme-primary" as string]: theme.colors.primary,
       ["--theme-accent" as string]: theme.colors.accent,
       ["--theme-surface" as string]: theme.colors.surface,
@@ -174,28 +185,47 @@ export function FormView({ slug }: Props) {
     } as React.CSSProperties;
   }, [state, themesQuery.data]);
 
+  // Validate fields on the current page
+  const validateCurrentPage = useCallback((): boolean => {
+    if (!currentPage) return true;
+    const pageErrors = validateAllFields(currentPage.fields, values);
+    if (Object.keys(pageErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...pageErrors }));
+      const firstId = Object.keys(pageErrors)[0];
+      if (firstId) {
+        const el = document.getElementById(`field-${firstId}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return false;
+    }
+    return true;
+  }, [currentPage, values]);
+
+  const handleNext = () => {
+    if (!validateCurrentPage()) return;
+    setCurrentPageIdx((i) => Math.min(pages.length - 1, i + 1));
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handlePrev = () => {
+    setCurrentPageIdx((i) => Math.max(0, i - 1));
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (state.kind !== "ok") return;
 
     setServerError(null);
-    const validationErrors = validateAllFields(state.form.fields, values);
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      // Scroll to first error
-      const firstId = Object.keys(validationErrors)[0];
-      if (firstId) {
-        const el = document.getElementById(`field-${firstId}`);
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      return;
-    }
+    // For multi-page, only validate the last page on submit (previous pages already validated)
+    if (!validateCurrentPage()) return;
 
     setErrors({});
 
+    // Only include visible fields in submission
     const answers: Array<{ fieldId: string; value: AnswerValue }> = [];
-    for (const f of state.form.fields) {
+    for (const f of visibleFields) {
       const val = values[f.id] ?? null;
       if (val !== null && val !== "" && !(Array.isArray(val) && val.length === 0)) {
         answers.push({ fieldId: f.id, value: val });
@@ -249,10 +279,7 @@ export function FormView({ slug }: Props) {
         title={state.title}
         error={state.error}
         onSubmit={(pw) => {
-          // Setting the state triggers refetch; useEffect will move us
-          // back to "loading" then to either "locked" with an error or "ok".
           setPassword(pw);
-          setState({ kind: "loading" });
         }}
       />
     );
@@ -303,6 +330,7 @@ export function FormView({ slug }: Props) {
 
   // ----- Form view -----
   const { form } = state;
+  const fieldsToRender = currentPage?.fields ?? [];
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 md:py-16" style={themeStyle}>
@@ -325,56 +353,88 @@ export function FormView({ slug }: Props) {
         <div className="mx-auto mt-6 h-px w-24 chakra-divider" />
       </div>
 
+      {/* Progress bar for multi-page */}
+      {isMultiPage && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+              Page {currentPageIdx + 1} of {pages.length}
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-konoha-orange">
+              {Math.round(((currentPageIdx + 1) / pages.length) * 100)}%
+            </span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-konoha-forest/30 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-konoha-orange to-[#cc4400] transition-all duration-500 ease-out shadow-[0_0_8px_rgba(255,107,0,0.5)]"
+              style={{ width: `${((currentPageIdx + 1) / pages.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Page title */}
+      {isMultiPage && currentPage?.title && (
+        <div className="mb-6 text-center">
+          <h2 className="font-heading text-xl font-bold tracking-wide text-foreground">
+            {currentPage.title}
+          </h2>
+          {currentPage.description && (
+            <p className="mt-1 text-sm text-muted-foreground">{currentPage.description}</p>
+          )}
+        </div>
+      )}
+
       {/* Form */}
       <form onSubmit={handleSubmit} noValidate className="scroll-card p-4 sm:p-6 md:p-10">
         <div className="space-y-6">
-          {form.fields
-            .slice()
-            .sort((a, b) => a.order - b.order)
-            .map((field) => {
-              const error = errors[field.id];
-              return (
-                <div key={field.id} id={`field-${field.id}`} className="scroll-mt-24">
-                  {field.type !== "checkbox" && (
-                    <label className="mb-2 flex items-baseline gap-1 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                      <span>{field.label}</span>
-                      {field.required && <span className="text-konoha-orange">✦</span>}
-                    </label>
-                  )}
-                  <FieldRenderer
-                    field={field}
-                    value={values[field.id] ?? null}
-                    onChange={(v) => {
-                      setValues((prev) => ({ ...prev, [field.id]: v }));
-                      // Clear error on edit
-                      if (errors[field.id]) {
-                        const valid = validateField(field, v);
-                        setErrors((prev) => {
-                          const next = { ...prev };
-                          if (!valid) delete next[field.id];
-                          else next[field.id] = valid;
-                          return next;
-                        });
-                      }
-                    }}
-                    onFirstInteract={handleFirstInteract}
-                    error={error}
-                    disabled={submit.isPending}
-                  />
-                  {field.helpText && !error && (
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/70">
-                      {field.helpText}
-                    </p>
-                  )}
-                  {error && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-konoha-akatsuki">
-                      <AlertCircle className="h-3 w-3" />
-                      {error}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+          {fieldsToRender.map((field) => {
+            const error = errors[field.id];
+            return (
+              <div
+                key={field.id}
+                id={`field-${field.id}`}
+                className="scroll-mt-24 animate-[fadeInUp_0.3s_ease]"
+              >
+                {field.type !== "checkbox" && (
+                  <label className="mb-2 flex items-baseline gap-1 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                    <span>{field.label}</span>
+                    {field.required && <span className="text-konoha-orange">✦</span>}
+                  </label>
+                )}
+                <FieldRenderer
+                  field={field}
+                  value={values[field.id] ?? null}
+                  onChange={(v) => {
+                    setValues((prev) => ({ ...prev, [field.id]: v }));
+                    if (errors[field.id]) {
+                      const valid = validateField(field, v);
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        if (!valid) delete next[field.id];
+                        else next[field.id] = valid;
+                        return next;
+                      });
+                    }
+                  }}
+                  onFirstInteract={handleFirstInteract}
+                  error={error}
+                  disabled={submit.isPending}
+                />
+                {field.helpText && !error && (
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/70">
+                    {field.helpText}
+                  </p>
+                )}
+                {error && (
+                  <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-konoha-akatsuki">
+                    <AlertCircle className="h-3 w-3" />
+                    {error}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Server error */}
@@ -385,27 +445,73 @@ export function FormView({ slug }: Props) {
           </div>
         )}
 
-        {/* Submit */}
+        {/* Navigation / Submit */}
         <div className="mt-8 flex flex-col items-center gap-3">
-          <button
-            type="submit"
-            disabled={submit.isPending}
-            className="btn-rasengan flex h-12 min-w-[220px] items-center justify-center gap-2 rounded-md bg-gradient-to-br from-konoha-orange to-[#cc4400] px-8 font-heading text-xs uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(255,107,0,0.4)] transition-shadow hover:shadow-[0_0_50px_rgba(255,107,0,0.6)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submit.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Sealing…
-              </>
-            ) : (
-              "Submit Scroll"
-            )}
-          </button>
+          {isMultiPage ? (
+            <div className="flex w-full items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handlePrev}
+                disabled={currentPageIdx === 0}
+                className="flex h-12 items-center gap-2 rounded-md border border-konoha-forest/60 px-5 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-all hover:border-konoha-orange hover:text-konoha-orange disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+              {isLastPage ? (
+                <button
+                  type="submit"
+                  disabled={submit.isPending}
+                  className="btn-rasengan flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-gradient-to-br from-konoha-orange to-[#cc4400] px-8 font-heading text-xs uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(255,107,0,0.4)] transition-shadow hover:shadow-[0_0_50px_rgba(255,107,0,0.6)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submit.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sealing…
+                    </>
+                  ) : (
+                    "Submit Scroll"
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="btn-rasengan flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-gradient-to-br from-konoha-orange to-[#cc4400] px-8 font-heading text-xs uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(255,107,0,0.4)] transition-shadow hover:shadow-[0_0_50px_rgba(255,107,0,0.6)]"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="submit"
+              disabled={submit.isPending}
+              className="btn-rasengan flex h-12 min-w-[220px] items-center justify-center gap-2 rounded-md bg-gradient-to-br from-konoha-orange to-[#cc4400] px-8 font-heading text-xs uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(255,107,0,0.4)] transition-shadow hover:shadow-[0_0_50px_rgba(255,107,0,0.6)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submit.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sealing…
+                </>
+              ) : (
+                "Submit Scroll"
+              )}
+            </button>
+          )}
           <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
             Powered by Konoha Forms
           </p>
         </div>
       </form>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

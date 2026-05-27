@@ -39,16 +39,16 @@ function formatDuration(ms: number | null): string {
   return `${min}m ${sec % 60}s`;
 }
 
-function renderValue(value: unknown): React.ReactNode {
+function RenderValue({ value }: { value: unknown }) {
   if (value === null || value === undefined || value === "") {
     return <span className="italic text-muted-foreground/60">No answer</span>;
   }
   if (Array.isArray(value)) {
     return (
       <div className="flex flex-wrap gap-1.5">
-        {value.map((v, i) => (
+        {value.map((v) => (
           <span
-            key={i}
+            key={`${typeof v}-${String(v)}`}
             className="rounded-md border border-konoha-forest/60 bg-konoha-ink/60 px-2 py-0.5 text-[11px]"
           >
             {String(v)}
@@ -67,7 +67,13 @@ function renderValue(value: unknown): React.ReactNode {
   return <span className="break-words">{String(value)}</span>;
 }
 
-export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Props) {
+export function ResponseDrawer({
+  open,
+  onClose,
+  formId,
+  responseId,
+  fields,
+}: Props) {
   const toast = useToast();
   const utils = trpc.useUtils();
 
@@ -126,7 +132,11 @@ export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Pr
   const sortedFields = fields.slice().sort((a, b) => a.order - b.order);
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end" role="dialog" aria-modal>
+    <div
+      className="fixed inset-0 z-[60] flex justify-end"
+      role="dialog"
+      aria-modal
+    >
       {/* Backdrop */}
       <button
         type="button"
@@ -161,19 +171,29 @@ export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Pr
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading || !response ? (
             <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i}>
-                  <div className="h-3 w-1/4 animate-pulse rounded bg-konoha-forest/40" />
-                  <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-konoha-forest/30" />
-                </div>
-              ))}
+              {["skeleton-1", "skeleton-2", "skeleton-3", "skeleton-4"].map(
+                (id) => (
+                  <div key={id}>
+                    <div className="h-3 w-1/4 animate-pulse rounded bg-konoha-forest/40" />
+                    <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-konoha-forest/30" />
+                  </div>
+                ),
+              )}
             </div>
           ) : (
             <>
               {/* Meta block */}
               <div className="mb-6 grid grid-cols-2 gap-3">
-                <Meta icon={Calendar} label="Submitted" value={formatDateTime(response.submittedAt)} />
-                <Meta icon={Timer} label="Time spent" value={formatDuration(response.completionTimeMs)} />
+                <Meta
+                  icon={Calendar}
+                  label="Submitted"
+                  value={formatDateTime(response.submittedAt)}
+                />
+                <Meta
+                  icon={Timer}
+                  label="Time spent"
+                  value={formatDuration(response.completionTimeMs)}
+                />
                 <Meta
                   icon={Mail}
                   label="Email"
@@ -190,7 +210,9 @@ export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Pr
               {/* Answers */}
               <div className="space-y-5">
                 {sortedFields.map((field) => {
-                  const ans = response.answers.find((a) => a.fieldId === field.id);
+                  const ans = response.answers.find(
+                    (a) => a.fieldId === field.id,
+                  );
                   return (
                     <div
                       key={field.id}
@@ -200,7 +222,7 @@ export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Pr
                         {field.label}
                       </p>
                       <div className="text-sm leading-relaxed text-foreground">
-                        {renderValue(ans?.value)}
+                        <RenderValue value={ans?.value} />
                       </div>
                     </div>
                   );
@@ -216,7 +238,11 @@ export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Pr
             <button
               type="button"
               onClick={() => {
-                if (confirm("Purge this response from the village vault? This cannot be undone.")) {
+                if (
+                  confirm(
+                    "Purge this response from the village vault? This cannot be undone.",
+                  )
+                ) {
                   deleteResponse.mutate({ formId, responseId: response.id });
                 }
               }}
@@ -230,7 +256,7 @@ export function ResponseDrawer({ open, onClose, formId, responseId, fields }: Pr
         )}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes slideInRight {
           from { transform: translateX(20px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }

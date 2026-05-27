@@ -22,13 +22,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const segments = pathname.split("/").filter(Boolean);
   const crumbs = segments.map((seg, i) => {
     const href = "/" + segments.slice(0, i + 1).join("/");
-    return { label: seg.replace(/-/g, " "), href, last: i === segments.length - 1 };
+    return {
+      label: seg.replace(/-/g, " "),
+      href,
+      last: i === segments.length - 1,
+    };
   });
 
   return (
     <div className="flex min-h-screen">
       {/* Sidebar — desktop fixed, mobile drawer */}
-      <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -82,6 +89,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
+              aria-label="Search dashboard"
               placeholder="Search the village…"
               className="h-9 w-full rounded-md border border-konoha-forest/60 bg-konoha-ink/60 pl-9 pr-3 text-xs uppercase tracking-[0.15em] text-foreground placeholder:text-muted-foreground/60 focus:border-konoha-orange focus:outline-none focus:ring-2 focus:ring-konoha-orange/20"
             />
@@ -119,29 +127,39 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="relative group">
               <button
                 type="button"
+                aria-label="Demo account menu"
                 className="h-8 w-8 overflow-hidden rounded-full ring-2 ring-konoha-orange shadow-[0_0_12px_rgba(255,107,0,0.4)] transition-all hover:ring-konoha-gold flex items-center justify-center bg-gradient-to-br from-konoha-orange to-[#cc4400]"
               >
-                <span className="font-heading text-xs font-bold text-white uppercase">D</span>
+                <span className="font-heading text-xs font-bold text-white uppercase">
+                  D
+                </span>
               </button>
-              
+
               <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-konoha-forest/60 bg-konoha-ink p-2 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-150 origin-top-right shadow-[0_4px_24px_rgba(0,0,0,0.8)] z-50">
                 <div className="px-2 py-1.5 border-b border-konoha-forest/30 mb-1.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-konoha-orange">Demo Shinobi</p>
-                  <p className="text-[9px] text-muted-foreground truncate">{me.email}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-konoha-orange">
+                    Demo Shinobi
+                  </p>
+                  <p className="text-[9px] text-muted-foreground truncate">
+                    {me.email}
+                  </p>
                 </div>
-                <a
-                  href="/api/demo-logout"
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-konoha-akatsuki hover:bg-konoha-akatsuki/10 transition-colors"
-                >
-                  Exit Demo Mode
-                </a>
+                <form action="/api/demo-logout" method="post">
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-konoha-akatsuki hover:bg-konoha-akatsuki/10 transition-colors"
+                  >
+                    Exit Demo Mode
+                  </button>
+                </form>
               </div>
             </div>
           ) : (
             <UserButton
               appearance={{
                 elements: {
-                  avatarBox: "h-8 w-8 ring-2 ring-konoha-orange/40 hover:ring-konoha-orange",
+                  avatarBox:
+                    "h-8 w-8 ring-2 ring-konoha-orange/40 hover:ring-konoha-orange",
                 },
               }}
             />

@@ -121,6 +121,10 @@ export const formFieldsTable = pgTable(
 
     conditionalLogic: jsonb("conditional_logic").$type<ConditionalLogic>(),
 
+    pageBreak: boolean("page_break").notNull().default(false),
+    pageTitle: varchar("page_title", { length: 255 }),
+    pageDescription: text("page_description"),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
   },

@@ -1,42 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-type Status = "checking" | "online" | "offline";
-
+import { useQuery } from "@tanstack/react-query";
 
 export function NetworkStatus() {
-  const [status, setStatus] = useState<Status>("checking");
-  const [uptime, setUptime] = useState<number | null>(null);
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["networkStatus"],
+    queryFn: async () => {
+      const res = await fetch("/api/backend/health.check", {
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const json = await res.json();
+      return json?.result?.data ?? json?.data ?? json;
+    },
+    refetchInterval: 15_000,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const ping = async () => {
-      try {
-        const res = await fetch("/api/backend/health.check", {
-          headers: { "Content-Type": "application/json" },
-        });
-        if (!res.ok) throw new Error(String(res.status));
-        const json = await res.json();
-        if (cancelled) return;
-        setStatus("online");
-
-        const data = json?.result?.data ?? json?.data ?? json;
-        setUptime(data?.uptime ?? null);
-      } catch {
-        if (cancelled) return;
-        setStatus("offline");
-      }
-    };
-
-    ping();
-    const id = setInterval(ping, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+  const status = isLoading ? "checking" : isError ? "offline" : "online";
+  const uptime = data?.uptime ?? null;
 
   const dotColor =
     status === "online"

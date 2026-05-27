@@ -13,6 +13,7 @@ import {
   X,
   Sparkles,
   Settings as SettingsIcon,
+  LayoutTemplate,
 } from "lucide-react";
 import { KonohaLeaf } from "@/components/konoha/leaf";
 
@@ -47,6 +48,11 @@ const navigation = [
     label: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
+  },
+  {
+    label: "Templates",
+    href: "/dashboard/forms/new",
+    icon: LayoutTemplate,
   },
   {
     label: "Settings",

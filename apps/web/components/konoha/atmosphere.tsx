@@ -188,7 +188,7 @@ export function KonohaAtmosphere() {
 
   return (
     <>
-      <canvas ref={canvasRef} className="konoha-bg" aria-hidden />
+      <canvas ref={canvasRef} className="konoha-bg" aria-hidden tabIndex={-1} />
       <div className="konoha-rain" aria-hidden />
       <div className="konoha-watermark" aria-hidden>
         <KonohaLeaf size={800} color="#FF6B00" />

@@ -8,6 +8,13 @@
       "when": 1779820822275,
       "tag": "0000_familiar_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779899280314,
+      "tag": "0001_swift_vivisector",
+      "breakpoints": true
     }
   ]
 }

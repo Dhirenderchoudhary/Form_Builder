@@ -30,27 +30,25 @@ interface FormRow {
   responseCount: number;
 }
 
-const statusStyles: Record<
-  FormRow["status"],
-  { label: string; cls: string }
-> = {
-  draft: {
-    label: "Draft",
-    cls: "bg-konoha-forest/30 text-muted-foreground border-konoha-forest",
-  },
-  published: {
-    label: "Live",
-    cls: "bg-konoha-orange/15 text-konoha-orange border-konoha-orange/40",
-  },
-  closed: {
-    label: "Sealed",
-    cls: "bg-konoha-akatsuki/15 text-konoha-akatsuki border-konoha-akatsuki/40",
-  },
-  archived: {
-    label: "Archived",
-    cls: "bg-konoha-forest/20 text-muted-foreground border-konoha-forest",
-  },
-};
+const statusStyles: Record<FormRow["status"], { label: string; cls: string }> =
+  {
+    draft: {
+      label: "Draft",
+      cls: "bg-konoha-forest/30 text-muted-foreground border-konoha-forest",
+    },
+    published: {
+      label: "Live",
+      cls: "bg-konoha-orange/15 text-konoha-orange border-konoha-orange/40",
+    },
+    closed: {
+      label: "Sealed",
+      cls: "bg-konoha-akatsuki/15 text-konoha-akatsuki border-konoha-akatsuki/40",
+    },
+    archived: {
+      label: "Archived",
+      cls: "bg-konoha-forest/20 text-muted-foreground border-konoha-forest",
+    },
+  };
 
 type Tab = "active" | "sealed" | "all";
 
@@ -75,7 +73,8 @@ function formatRelative(d: string | Date | null): string {
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+    year:
+      date.getFullYear() === new Date().getFullYear() ? undefined : "numeric",
   });
 }
 
@@ -85,9 +84,10 @@ interface FormsListProps {
 }
 
 export function FormsList({ full = false }: FormsListProps) {
-  const router = useRouter();
+  const { push, replace } = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  
   const toast = useToast();
   const utils = trpc.useUtils();
 
@@ -99,25 +99,31 @@ export function FormsList({ full = false }: FormsListProps) {
   // Auto-open the create dialog when ?new=1 or ?create=true is in the URL.
   // Strips the param after opening so back/forward doesn't re-trigger.
   useEffect(() => {
-    if (searchParams.get("new") === "1" || searchParams.get("create") === "true") {
+    if (
+      searchParams.get("new") === "1" ||
+      searchParams.get("create") === "true"
+    ) {
       setCreateOpen(true);
-      router.replace(pathname, { scroll: false });
+      replace(pathname, { scroll: false });
     }
-  }, [searchParams, router, pathname]);
+  }, [searchParams, replace, pathname]);
 
   // Theme-apply mode: came from /dashboard/themes with ?theme=ID
   const themeIdToApply = searchParams.get("theme");
+
 
   // Look up the theme being applied so we can show its name
   const themesQuery = trpc.explore.listThemes.useQuery(undefined, {
     enabled: !!themeIdToApply,
   });
   const themeBeingApplied = themeIdToApply
-    ? ((themesQuery.data ?? []) as Array<{
-        id: string;
-        name: string;
-        colors: { primary: string; accent: string };
-      }>).find((t) => t.id === themeIdToApply)
+    ? (
+        (themesQuery.data ?? []) as Array<{
+          id: string;
+          name: string;
+          colors: { primary: string; accent: string };
+        }>
+      ).find((t) => t.id === themeIdToApply)
     : null;
 
   const applyTheme = trpc.forms.update.useMutation({
@@ -128,7 +134,7 @@ export function FormsList({ full = false }: FormsListProps) {
         title: "Theme applied",
         message: `${themeBeingApplied?.name ?? "Theme"} now decorates the scroll.`,
       });
-      router.replace(pathname, { scroll: false });
+      replace(pathname, { scroll: false });
     },
     onError: (err) =>
       toast.push({
@@ -139,14 +145,17 @@ export function FormsList({ full = false }: FormsListProps) {
   });
 
   const cancelThemeApply = () => {
-    router.replace(pathname, { scroll: false });
+    replace(pathname, { scroll: false });
   };
 
   const { data, isLoading, isError, error } = trpc.forms.list.useQuery();
 
   const filtered = useMemo(() => {
     let rows = (data ?? []) as FormRow[];
-    if (tab === "active") rows = rows.filter((r) => r.status === "draft" || r.status === "published");
+    if (tab === "active")
+      rows = rows.filter(
+        (r) => r.status === "draft" || r.status === "published",
+      );
     else if (tab === "sealed") rows = rows.filter((r) => r.status === "closed");
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -184,7 +193,7 @@ export function FormsList({ full = false }: FormsListProps) {
       return <EmptyState onCreate={() => setCreateOpen(true)} />;
     }
 
-    const top = (data as FormRow[]).slice(0, 5);
+    const top = ((data ?? []) as FormRow[]).slice(0, 5);
     return (
       <>
         <div className="scroll-card overflow-hidden">
@@ -194,22 +203,25 @@ export function FormsList({ full = false }: FormsListProps) {
                 key={form.id}
                 form={form}
                 onDelete={() => setDeleteTarget(form)}
-                onEdit={() => router.push(`/dashboard/forms/${form.id}`)}
+                onEdit={() => push(`/dashboard/forms/${form.id}`)}
               />
             ))}
           </div>
-          {(data as FormRow[]).length > 5 && (
+          {((data ?? []) as FormRow[]).length > 5 && (
             <Link
               href="/dashboard/forms"
               className="flex items-center justify-center gap-2 border-t border-konoha-forest/40 py-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-konoha-forest/15 hover:text-konoha-orange"
             >
-              View all {(data as FormRow[]).length} scrolls
+              View all {((data ?? []) as FormRow[]).length} scrolls
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           )}
         </div>
 
-        <CreateFormDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+        <CreateFormDialog
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+        />
         <DeleteFormDialog
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
@@ -238,14 +250,16 @@ export function FormsList({ full = false }: FormsListProps) {
         <div className="flex rounded-md border border-konoha-forest/40 bg-konoha-ink/40 p-1">
           {tabs.map((t) => {
             const active = t.id === tab;
+            const rows = ((data ?? []) as FormRow[]);
             const count =
               t.id === "active"
-                ? (data as FormRow[]).filter(
+                ? rows.filter(
                     (r) => r.status === "draft" || r.status === "published",
                   ).length
                 : t.id === "sealed"
-                  ? (data as FormRow[]).filter((r) => r.status === "closed").length
-                  : (data as FormRow[]).length;
+                  ? rows.filter((r) => r.status === "closed")
+                      .length
+                  : rows.length;
             return (
               <button
                 key={t.id}
@@ -276,6 +290,7 @@ export function FormsList({ full = false }: FormsListProps) {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
+            aria-label="Search forms"
             placeholder="Search scrolls…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -316,14 +331,17 @@ export function FormsList({ full = false }: FormsListProps) {
                     : undefined
                 }
                 onDelete={() => setDeleteTarget(form)}
-                onEdit={() => router.push(`/dashboard/forms/${form.id}`)}
+                onEdit={() => push(`/dashboard/forms/${form.id}`)}
               />
             ))}
           </div>
         </div>
       )}
 
-      <CreateFormDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateFormDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+      />
       <DeleteFormDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -485,9 +503,7 @@ function NoMatches({ onClear }: { onClear: () => void }) {
   return (
     <div className="scroll-card flex flex-col items-center gap-3 px-6 py-12 text-center">
       <Search className="h-6 w-6 text-muted-foreground" />
-      <p className="text-sm text-foreground">
-        No scrolls match your search.
-      </p>
+      <p className="text-sm text-foreground">No scrolls match your search.</p>
       <button
         type="button"
         onClick={onClear}
@@ -542,8 +558,11 @@ function ThemeApplyBanner({
         </div>
         <p className="mt-0.5 text-xs text-foreground">
           Pick a scroll to apply{" "}
-          <span className="font-semibold text-konoha-orange">{themeName}</span> to.
-          {loading && <span className="ml-1.5 text-muted-foreground">Sealing…</span>}
+          <span className="font-semibold text-konoha-orange">{themeName}</span>{" "}
+          to.
+          {loading && (
+            <span className="ml-1.5 text-muted-foreground">Sealing…</span>
+          )}
         </p>
       </div>
 

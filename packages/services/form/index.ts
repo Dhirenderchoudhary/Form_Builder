@@ -67,14 +67,17 @@ export class FormService extends BaseService {
     const form = await this.findFormOrThrow(formId);
     this.assertOwner(form, userId);
 
-    let slug = form.slug;
+    let slug = data.slug ?? form.slug;
     if (data.title && !data.slug) {
       slug = await this.generateUniqueSlug(data.title, formId);
     }
 
+    // Remove slug from data to avoid double-setting
+    const { slug: _s, ...rest } = data;
+
     const [updated] = await db
       .update(formsTable)
-      .set({ ...data, slug })
+      .set({ ...rest, slug })
       .where(eq(formsTable.id, formId))
       .returning();
 
@@ -90,6 +93,60 @@ export class FormService extends BaseService {
       .update(formsTable)
       .set({ status: "archived" })
       .where(eq(formsTable.id, formId));
+  }
+
+  async cloneForm(formId: string, userId: string): Promise<SelectForm> {
+    const form = await this.findFormOrThrow(formId);
+    this.assertOwner(form, userId);
+
+    const fields = await this.getFieldsSorted(formId);
+
+    const newSlug = await this.generateUniqueSlug(`${form.title} (Copy)`);
+
+    const [newForm] = await db
+      .insert(formsTable)
+      .values({
+        userId,
+        title: `${form.title} (Copy)`,
+        description: form.description,
+        slug: newSlug,
+        status: "draft",
+        visibility: form.visibility,
+        themeId: form.themeId,
+        settings: form.settings,
+        maxResponses: form.maxResponses,
+        closesAt: form.closesAt,
+        collectEmail: form.collectEmail,
+        successMessage: form.successMessage,
+        redirectUrl: form.redirectUrl,
+      })
+      .returning();
+
+    if (!newForm) this.internal("Failed to clone form");
+
+    // Clone all fields
+    if (fields.length > 0) {
+      const fieldInserts: InsertFormField[] = fields.map((field) => ({
+        formId: newForm.id,
+        type: field.type,
+        label: field.label,
+        placeholder: field.placeholder,
+        helpText: field.helpText,
+        order: field.order,
+        required: field.required,
+        validations: field.validations,
+        options: field.options,
+        minValue: field.minValue,
+        maxValue: field.maxValue,
+        minLabel: field.minLabel,
+        maxLabel: field.maxLabel,
+        conditionalLogic: field.conditionalLogic,
+      }));
+
+      await db.insert(formFieldsTable).values(fieldInserts);
+    }
+
+    return newForm;
   }
 
   async setFormPassword(

@@ -385,8 +385,30 @@ function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 
 export default function NarutoForm() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<FormState>(INITIAL_STATE);
+  const [data, setData] = useState<FormState>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.data) return { ...INITIAL_STATE, ...parsed.data };
+        }
+      } catch {}
+    }
+    return INITIAL_STATE;
+  });
+  const [step, setStep] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed.step === "number") return parsed.step;
+        }
+      } catch {}
+    }
+    return 0;
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -396,20 +418,6 @@ export default function NarutoForm() {
   const [soundOn, setSoundOn] = useState(false);
 
   useParticles(canvasRef);
-
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.data) setData({ ...INITIAL_STATE, ...parsed.data });
-        if (typeof parsed.step === "number") setStep(parsed.step);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   // Save to localStorage
   useEffect(() => {
@@ -597,7 +605,7 @@ export default function NarutoForm() {
   if (success) {
     return (
       <div className={styles.root}>
-        <canvas ref={canvasRef} className={styles.bgCanvas} aria-hidden />
+        <canvas ref={canvasRef} className={styles.bgCanvas} aria-hidden tabIndex={-1} />
         <div className={styles.bgGradient} aria-hidden />
         <div className={styles.successOverlay}>
           <div className={styles.seal}>
@@ -624,7 +632,7 @@ export default function NarutoForm() {
 
   return (
     <div className={styles.root}>
-      <canvas ref={canvasRef} className={styles.bgCanvas} aria-hidden />
+      <canvas ref={canvasRef} className={styles.bgCanvas} aria-hidden tabIndex={-1} />
       <div className={styles.bgGradient} aria-hidden />
       <div className={styles.bgClouds} aria-hidden />
       <div className={styles.bgRain} aria-hidden />
@@ -661,9 +669,9 @@ export default function NarutoForm() {
             className={styles.progressLineFill}
             style={{ width: `calc(${progressPercent}% - ${progressPercent === 0 ? 0 : 24}px)` }}
           />
-          {STEP_LABELS.map((_, i) => (
+          {STEP_LABELS.map((label, i) => (
             <div
-              key={i}
+              key={label}
               className={`${styles.stepMarker} ${i === step ? styles.active : ""} ${
                 i < step ? styles.completed : ""
               }`}
@@ -801,6 +809,7 @@ function Step1({
         icon={<KunaiIcon />}
       >
         <input
+          aria-label="Shinobi Name"
           className={styles.input}
           placeholder="e.g. Naruto Uzumaki"
           value={data.fullName}
@@ -817,6 +826,7 @@ function Step1({
         icon={<KunaiIcon />}
       >
         <input
+          aria-label="Your Clan"
           className={styles.input}
           placeholder="e.g. Uzumaki, Uchiha, Hyuga"
           value={data.clan}
@@ -833,6 +843,7 @@ function Step1({
         icon={<HashIcon />}
       >
         <input
+          aria-label="Years Since Awakening"
           type="number"
           className={styles.input}
           placeholder="e.g. 16"
@@ -852,6 +863,7 @@ function Step1({
         icon={<ScrollIcon />}
       >
         <input
+          aria-label="Hawk Messenger Address"
           type="email"
           className={styles.input}
           placeholder="hawk@konohagakure.jp"
@@ -901,9 +913,9 @@ function Step2({
       <p className={styles.stepDesc}>What flows through you?</p>
 
       <div className={styles.field}>
-        <label className={styles.label}>
+        <div className={styles.label}>
           Chakra Nature<span className={styles.required}>✦</span>
-        </label>
+        </div>
         <div
           className={`${styles.orbGroup} ${errors.element ? styles.fieldError : ""}`}
           role="radiogroup"
@@ -916,6 +928,7 @@ function Step2({
               }`}
             >
               <input
+                aria-label={el.label}
                 type="radio"
                 name="element"
                 value={el.id}
@@ -932,6 +945,7 @@ function Step2({
 
       <Field label="Ninja Rank" required error={errors.rank}>
         <select
+          aria-label="Ninja Rank"
           className={styles.select}
           value={data.rank}
           onChange={(e) => onChange("rank", e.target.value)}
@@ -947,7 +961,7 @@ function Step2({
       </Field>
 
       <div className={styles.field}>
-        <label className={styles.label}>Special Abilities</label>
+        <div className={styles.label}>Special Abilities</div>
         <div className={styles.tagGroup}>
           {ABILITIES.map((a) => (
             <button
@@ -964,11 +978,12 @@ function Step2({
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Chakra Level</label>
+        <div className={styles.label}>Chakra Level</div>
         <div className={styles.sliderWrap}>
           <div className={styles.sliderTrack}>
             <div className={styles.sliderFill} style={{ width: `${data.chakra}%` }} />
             <input
+              aria-label="Chakra Level"
               type="range"
               className={styles.slider}
               min={0}
@@ -1014,9 +1029,9 @@ function Step3({
       <p className={styles.stepDesc}>Tell the Hokage what awaits you.</p>
 
       <div className={styles.field}>
-        <label className={styles.label}>
+        <div className={styles.label}>
           Mission Type<span className={styles.required}>✦</span>
-        </label>
+        </div>
         <div className={`${styles.cardGrid} ${errors.missionType ? styles.fieldError : ""}`}>
           {MISSIONS.map((m) => (
             <button
@@ -1037,6 +1052,7 @@ function Step3({
 
       <Field label="Mission Details" required error={errors.missionDetails}>
         <textarea
+          aria-label="Mission Details"
           className={styles.textarea}
           rows={5}
           placeholder="Describe the mission, the targets, the risks…"
@@ -1047,7 +1063,7 @@ function Step3({
       </Field>
 
       <div className={styles.field}>
-        <label className={styles.label}>Urgency</label>
+        <div className={styles.label}>Urgency</div>
         <div className={styles.toggleRow}>
           <span className={styles.toggleLabel}>
             {data.urgent ? "S-Class — Immediate" : "Standard timing"}
@@ -1065,7 +1081,7 @@ function Step3({
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Mission Scroll</label>
+        <div className={styles.label}>Mission Scroll</div>
         <label
           className={`${styles.dropZone} ${dragOver ? styles.over : ""}`}
           onDragOver={(e) => {
@@ -1076,6 +1092,7 @@ function Step3({
           onDrop={onDrop}
         >
           <input
+            aria-label="Mission Scroll"
             type="file"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -1138,6 +1155,7 @@ function Step4({
 
       <label className={`${styles.oath} ${data.oath ? styles.checked : ""}`}>
         <input
+          aria-label="I swear on the Will of Fire to complete this mission."
           type="checkbox"
           checked={data.oath}
           onChange={(e) => onChange("oath", e.target.checked)}
@@ -1254,6 +1272,7 @@ function Confetti() {
         zIndex: 51,
       }}
       aria-hidden
+      tabIndex={-1}
     />
   );
 }

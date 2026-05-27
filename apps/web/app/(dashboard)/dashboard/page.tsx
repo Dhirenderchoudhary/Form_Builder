@@ -12,6 +12,7 @@ import { ExploreSuggestions } from "./explore/_components/explore-grid";
 interface FormRow {
   id: string;
   status: "draft" | "published" | "closed" | "archived";
+  responseCount: number;
 }
 
 export default function DashboardHomePage() {
@@ -22,6 +23,7 @@ export default function DashboardHomePage() {
   const total = formsArr.length;
   const published = formsArr.filter((f) => f.status === "published").length;
   const drafts = formsArr.filter((f) => f.status === "draft").length;
+  const totalResponses = formsArr.reduce((acc, f) => acc + (f.responseCount ?? 0), 0);
   const livePercent = total > 0 ? Math.round((published / total) * 100) : 0;
 
   // Greeting by time of day — small humanizing touch
@@ -100,7 +102,7 @@ export default function DashboardHomePage() {
           />
           <StatCard
             label="Responses Collected"
-            value={0}
+            value={totalResponses}
             icon={Inbox}
             hint="Intel gathered from the field"
             loading={isLoading}

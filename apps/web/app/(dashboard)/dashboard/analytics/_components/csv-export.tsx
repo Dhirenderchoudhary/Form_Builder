@@ -60,22 +60,37 @@ export function CsvExport({ formId, formTitle, formSlug, fields }: Props) {
   const sortedFields = fields.slice().sort((a, b) => a.order - b.order);
 
   async function fetchAll(): Promise<ResponseRow[]> {
-    const all: ResponseRow[] = [];
-    let page = 1;
-    while (true) {
-      const data = (await utils.forms.listResponses.fetch({
-        formId,
-        page,
-        pageSize: PAGE_SIZE,
-      })) as { items: ResponseRow[]; total: number } | undefined;
-      if (!data) break;
-      all.push(...data.items);
-      if (all.length >= data.total || data.items.length === 0) break;
-      page++;
-      // Safety stop in case of a runaway loop
-      if (page > 200) break;
-    }
-    return all;
+    // Fetch the first page to discover the total count
+    const first = (await utils.forms.listResponses.fetch({
+      formId,
+      page: 1,
+      pageSize: PAGE_SIZE,
+    })) as { items: ResponseRow[]; total: number } | undefined;
+
+    if (!first || first.items.length === 0) return [];
+
+    const totalPages = Math.min(
+      Math.ceil(first.total / PAGE_SIZE),
+      200, // Safety cap
+    );
+
+    if (totalPages <= 1) return first.items;
+
+    // Fetch all remaining pages concurrently
+    const pageNumbers = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+    const rest = await Promise.all(
+      pageNumbers.map((page) =>
+        utils.forms.listResponses.fetch({ formId, page, pageSize: PAGE_SIZE }),
+      ),
+    );
+
+    return [
+      ...first.items,
+      ...rest.flatMap(
+        (r) =>
+          ((r as { items: ResponseRow[] } | undefined)?.items ?? []),
+      ),
+    ];
   }
 
   async function handleExport() {

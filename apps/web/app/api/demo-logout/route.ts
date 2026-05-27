@@ -3,9 +3,13 @@ import { redirect } from "next/navigation";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function POST() {
   const cookieStore = await cookies();
   cookieStore.delete("demo_session");
-  
+
+  redirect("/");
+}
+
+export async function GET() {
   redirect("/");
 }

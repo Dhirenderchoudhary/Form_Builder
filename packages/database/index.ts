@@ -6,14 +6,15 @@ import * as schema from "./schema";
 
 type DB = NodePgDatabase<typeof schema>;
 
-let _db: DB | undefined;
-
+const globalForDb = globalThis as unknown as {
+  _db: DB | undefined;
+};
 
 function getDb(): DB {
-  if (!_db) {
-    _db = drizzle(env.DATABASE_URL, { schema });
+  if (!globalForDb._db) {
+    globalForDb._db = drizzle(env.DATABASE_URL, { schema });
   }
-  return _db;
+  return globalForDb._db;
 }
 
 

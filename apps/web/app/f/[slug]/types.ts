@@ -19,6 +19,16 @@ export type PublicFieldType =
   | "scale"
   | "file_upload";
 
+export interface ConditionalLogic {
+  action: "show" | "hide";
+  conditions: Array<{
+    fieldId: string;
+    operator: "equals" | "not_equals" | "contains" | "is_empty" | "is_not_empty";
+    value?: string;
+  }>;
+  logicOperator: "and" | "or";
+}
+
 export interface PublicField {
   id: string;
   type: PublicFieldType;
@@ -40,6 +50,10 @@ export interface PublicField {
   maxValue: number | null;
   minLabel: string | null;
   maxLabel: string | null;
+  conditionalLogic: ConditionalLogic | null;
+  pageBreak: boolean;
+  pageTitle: string | null;
+  pageDescription: string | null;
 }
 
 export interface PublicForm {
@@ -51,8 +65,12 @@ export interface PublicForm {
   successMessage: string | null;
   collectEmail: boolean;
   themeId: string | null;
+  settings: {
+    showProgressBar?: boolean;
+  } | null;
   fields: PublicField[];
 }
 
 /** Shape sent to public.submit */
 export type AnswerValue = string | number | boolean | string[] | null;
+

@@ -1,0 +1,216 @@
+react-doctor v0.2.9
+
+  
+
+  ✗ react-doctor/only-export-components                       ×2
+      Fast refresh only works when a file only exports components. Move non-component exports to a separate file.
+      → Move non-component exports out of files that export components.
+      components/ui/button.tsx:57
+      components/ui/badge.tsx:36
+
+  ⚠ react-doctor/control-has-associated-label                 ×15
+      A control must be associated with a text label — add visible text, `aria-label`, or `aria-labelledby`.
+      → Every interactive control must have an accessible label.
+      app/(dashboard)/dashboard/forms/[formId]/_builder/password-section.tsx:117
+      app/(dashboard)/dashboard/analytics/_components/responses-table.tsx:149
+      app/(dashboard)/dashboard/analytics/_components/responses-table.tsx:169
+      app/(dashboard)/dashboard/analytics/_components/responses-table.tsx:188
+      app/(dashboard)/dashboard/settings/page.tsx:256
+      app/f/[slug]/_components/form-view.tsx:591
+      app/(dashboard)/dashboard/forms/[formId]/_builder/form-settings.tsx:79
+      app/(dashboard)/dashboard/forms/[formId]/_builder/form-settings.tsx:88
+      app/(dashboard)/dashboard/forms/[formId]/_builder/form-settings.tsx:98
+      app/(dashboard)/dashboard/forms/[formId]/_builder/form-settings.tsx:133
+      app/(dashboard)/dashboard/forms/[formId]/_builder/form-settings.tsx:163
+      app/(dashboard)/dashboard/forms/[formId]/_builder/form-settings.tsx:192
+      app/(dashboard)/dashboard/forms/[formId]/_builder/inspector.tsx:388
+      app/(dashboard)/dashboard/forms/[formId]/_builder/inspector.tsx:397
+      app/(dashboard)/dashboard/forms/[formId]/_builder/inspector.tsx:525
+
+  ⚠ react-doctor/no-multi-comp                                ×10
+      Declare only one React component per file. Found extra component: KakashiSilhouette.
+      → Move secondary components into their own files.
+      components/konoha/characters.tsx:112
+      components/konoha/characters.tsx:174
+      components/konoha/leaf.tsx:52
+      components/konoha/leaf.tsx:79
+      app/(dashboard)/dashboard/analytics/_components/charts.tsx:168
+      app/(dashboard)/dashboard/analytics/_components/charts.tsx:250
+      app/(dashboard)/dashboard/explore/_components/explore-card.tsx:111
+      app/(dashboard)/dashboard/explore/_components/explore-card.tsx:128
+      components/konoha/dialog.tsx:115
+      components/konoha/dialog.tsx:149
+
+  ⚠ react-doctor/no-generic-handler-names                     ×7
+      Non-descriptive handler name "handleFocus" — name should describe what it does, not when it runs
+      → Rename to describe the action: e.g. `handleSubmit` → `saveUserProfile`, `handleClick` → `toggleSidebar`
+      app/f/[slug]/_components/field.tsx:52
+      app/f/[slug]/_components/field.tsx:71
+      app/f/[slug]/_components/field.tsx:87
+      app/f/[slug]/_components/field.tsx:101
+      app/f/[slug]/_components/field.tsx:114
+      app/f/[slug]/_components/field.tsx:127
+      app/f/[slug]/_components/field.tsx:264
+
+  ⚠ react-doctor/no-giant-component                           ×6
+      Component "HomePage" is 361 lines — consider breaking it into smaller focused components
+      → Extract logical sections into focused components: `<UserHeader />`, `<UserActions />`, etc.
+      app/page.tsx:93
+      app/naruto/NarutoForm.tsx:386
+      app/(dashboard)/dashboard/analytics/_components/responses-table.tsx:55
+      app/f/[slug]/_components/form-view.tsx:44
+      app/(dashboard)/dashboard/forms/[formId]/_builder/inspector.tsx:56
+      app/(dashboard)/dashboard/forms/[formId]/_builder/builder.tsx:33
+
+  ⚠ react-doctor/prefer-tag-over-role                         ×6
+      Prefer the semantic `<progress>` element over `role="progressbar"` on a generic tag.
+      → Replace `role` with the semantic HTML element when one exists.
+      app/naruto/NarutoForm.tsx:666
+      components/konoha/toast.tsx:53
+      app/(dashboard)/dashboard/forms/[formId]/_builder/field-card.tsx:62
+      app/(dashboard)/dashboard/analytics/_components/response-drawer.tsx:137
+      app/(dashboard)/dashboard/forms/[formId]/_builder/builder.tsx:778
+      components/konoha/dialog.tsx:52
+
+  ⚠ react-doctor/exhaustive-deps                              ×6
+      React Hook `useMemo` has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.
+      → Don't blindly add missing dependencies. Read the hook callback first.
+      
+      Bad:
+      useEffect(() => {
+        setCount(count + 1);
+      }, [count]);
+      
+      Better:
+      useEffect(() => {
+        setCount((currentCount) => currentCount + 1);
+      }, []);
+      
+      If the missing value is recreated every render, move it inside the hook or stabilize it before adding it to deps.
+      app/f/[slug]/_components/form-view.tsx:108
+      app/f/[slug]/_components/form-view.tsx:108
+      app/f/[slug]/_components/form-view.tsx:126
+      app/f/[slug]/_components/form-view.tsx:126
+      app/f/[slug]/_components/form-view.tsx:186
+      app/(dashboard)/dashboard/forms/[formId]/_builder/builder.tsx:313
+
+  ⚠ react-doctor/nextjs-no-a-element                          ×5
+      Use next/link instead of <a> for internal links — enables client-side navigation and prefetching
+      → `import Link from 'next/link'` — enables client-side navigation, prefetching, and preserves scroll position
+      components/header.tsx:18
+      components/header.tsx:40
+      components/header.tsx:46
+      components/header.tsx:136
+      components/header.tsx:143
+
+  ⚠ react-doctor/react-compiler-destructure-method            ×4
+      Destructure for clarity: `const { push } = useRouter()` then call `push(...)` directly — easier for React Compiler to memoize and clearer about which methods this component depends on
+      → Destructure the method up front: `const { push } = useRouter()` then call `push(...)` directly — clearer dependency graph and easier for React Compiler to memoize
+      app/(dashboard)/dashboard/forms/new/page.tsx:58
+      app/(dashboard)/_components/forms-list.tsx:103
+      app/(dashboard)/_components/forms-list.tsx:104
+      app/(dashboard)/_components/forms-list.tsx:112
+
+  ⚠ react-doctor/prefer-useReducer                            ×4
+      Component "NarutoForm" has 9 useState calls — consider useReducer for related state
+      → Group related state: `const [state, dispatch] = useReducer(reducer, { field1, field2, ... })`
+      app/naruto/NarutoForm.tsx:386
+      app/(dashboard)/dashboard/analytics/_components/responses-table.tsx:55
+      app/f/[slug]/_components/form-view.tsx:44
+      app/(dashboard)/dashboard/forms/[formId]/_builder/builder.tsx:33
+
+  ⚠ react-doctor/anchor-is-valid                              ×3
+      `<a>` element has invalid `href` (`#`, `javascript:`, or empty) — provide a real destination.
+      → Anchors must have a valid destination — use `<button>` for in-page actions.
+      app/page.tsx:445
+      app/page.tsx:446
+      app/page.tsx:447
+
+  ⚠ react-doctor/design-no-em-dash-in-jsx-text                ×3
+      Em dash (—) in JSX text reads as model output — replace with comma, colon, semicolon, or parentheses
+      → Replace em dashes in JSX prose with commas, colons, semicolons, or parentheses so UI copy reads less like generated text.
+      app/(dashboard)/dashboard/themes/page.tsx:62
+      app/(dashboard)/dashboard/forms/new/page.tsx:113
+      app/(dashboard)/dashboard/explore/_components/explore-grid.tsx:165
+
+  ⚠ deslop/unused-export                                      ×3
+      Unused export: `default`
+      → Drop the `export` keyword (or remove the declaration) if no other module uses this symbol.
+      app/(dashboard)/_components/shell.tsx:177
+      components/konoha/illustrations.tsx:253
+      components/konoha/leaf.tsx:79
+
+  ⚠ react-doctor/no-gradient-text                             ×2
+      Gradient text (bg-clip-text + bg-gradient) is decorative rather than meaningful — a common AI tell. Use solid colors for text
+      → Use solid text colors for readability. If you need emphasis, use font weight, size, or a distinct color instead of gradients
+      app/page.tsx:130
+      app/explore/page.tsx:33
+
+  ⚠ react-doctor/no-autofocus                                 ×2
+      `autoFocus` should not be used — it disrupts users who expect the page focus to remain at the top of the document on load.
+      → Don't use `autoFocus` — it disorients users.
+      app/f/[slug]/_components/form-view.tsx:593
+      app/(dashboard)/dashboard/forms/[formId]/_builder/add-field-popover.tsx:89
+
+  ⚠ react-doctor/prefer-use-effect-event                      ×2
+      "onClose" is read only inside `addEventListener` — wrap it with useEffectEvent and remove it from the dep array so the effect doesn't re-synchronize on every parent render
+      → Wrap the callback with `useEffectEvent(callback)` (React 19+) and call the resulting binding from inside the sub-handler. The Effect Event captures the latest props/state without being a reactive dep, so the effect doesn't re-subscribe on every parent render. See https://react.dev/reference/react/useEffectEvent
+      app/(dashboard)/dashboard/analytics/_components/response-drawer.tsx:128
+      components/konoha/dialog.tsx:45
+
+  ⚠ react-doctor/nextjs-missing-metadata
+      Page without metadata or generateMetadata export — hurts SEO
+      → Add `export const metadata = { title: '...', description: '...' }` or `export async function generateMetadata()`
+      app/page.tsx:1
+
+  ⚠ react-doctor/rendering-hydration-mismatch-time
+      new Date() reachable from JSX renders differently on server vs client — wrap in useEffect+useState (client-only) or add suppressHydrationWarning to the parent if intentional
+      → Wrap dynamic time/random values in useEffect+useState (client-only) or add suppressHydrationWarning to the parent if intentional
+      app/page.tsx:443
+
+  ⚠ react-doctor/async-await-in-loop
+      await inside a for-loop runs the calls sequentially — for independent operations, collect them and use `await Promise.all(items.map(...))` to run them concurrently
+      → Collect the items and use `await Promise.all(items.map(...))` to run independent operations concurrently
+      app/(dashboard)/dashboard/forms/new/page.tsx:35
+
+  ⚠ react-doctor/js-combine-iterations
+      .filter().map() iterates the array twice — combine into a single loop with .reduce() or for...of
+      → Combine `.map().filter()` (or similar chains) into a single pass with `.reduce()` or a `for...of` loop to avoid iterating the array twice
+      app/(dashboard)/dashboard/forms/new/page.tsx:128
+
+  ⚠ react-doctor/no-react19-deprecated-apis
+      useContext is superseded by `use()` on React 19+ — `use()` reads context conditionally inside hooks, branches, and loops; switch to `import { use } from 'react'`
+      → Pass `ref` as a regular prop on function components — `forwardRef` is no longer needed in React 19+. Replace `useContext(X)` with `use(X)` for branch-aware context reads. Only enabled on projects detected as React 19+.
+      components/konoha/toast.tsx:5
+
+  ⚠ react-doctor/nextjs-no-use-search-params-without-suspense
+      useSearchParams() requires a <Suspense> boundary — without one, the entire page bails out to client-side rendering
+      → Wrap the component using useSearchParams: `<Suspense fallback={<Skeleton />}><SearchComponent /></Suspense>`
+      app/(dashboard)/_components/forms-list.tsx:89
+
+  ⚠ react-doctor/no-prevent-default
+      preventDefault() on <form> onSubmit — form won't work without JavaScript. Use a server action (`<form action={serverAction}>`) for progressive enhancement
+      → Use `<form action>` (works without JS) where your framework supports it, or use a `<button>` instead of `<a>` with preventDefault
+      app/f/[slug]/_components/form-view.tsx:584
+
+  ⚠ react-doctor/no-array-index-key
+      Array index in `key` doesn't uniquely identify the element — re-renders may use stale state.
+      → Use a stable, data-derived `key` instead of the array index.
+      app/(dashboard)/dashboard/forms/[formId]/_builder/inspector.tsx:471
+
+  ⚠ react-doctor/no-array-index-as-key
+      Array index "idx" used as key — causes bugs when list is reordered or filtered
+      → Use a stable unique identifier: `key={item.id}` or `key={item.slug}` — index keys break on reorder/filter
+      app/(dashboard)/dashboard/forms/[formId]/_builder/inspector.tsx:471
+
+  ┌─────┐  82 / 100 Great · web
+  │ ◠ ◠ │  █████████████████████████████████████████░░░░░░░░░
+  │  ▽  │  React Doctor (https://react.doctor)
+  └─────┘
+
+  89 issues
+  Full diagnostics written to /var/folders/yc/sjvv7sl16cg2ty9dx_x02tk80000gn/T/react-doctor-1ad925cf-5ebd-42e9-b84a-3ab95d86956b
+
+  → Share: https://www.react.doctor/share?p=web&s=82&e=2&w=87&f=29
+
+

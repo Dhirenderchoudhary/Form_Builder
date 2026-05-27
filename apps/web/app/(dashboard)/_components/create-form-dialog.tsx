@@ -2,9 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, LayoutTemplate } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { Dialog, KonohaInput, KonohaTextarea } from "@/components/konoha/dialog";
+import {
+  Dialog,
+  KonohaInput,
+  KonohaTextarea,
+} from "@/components/konoha/dialog";
 import { useToast } from "@/components/konoha/toast";
 
 interface Props {
@@ -20,7 +25,7 @@ const DESC_MAX = 240;
  * to its builder page (which is a stub for now — Pass 3).
  */
 export function CreateFormDialog({ open, onClose }: Props) {
-  const router = useRouter();
+  const { push } = useRouter();
   const toast = useToast();
   const utils = trpc.useUtils();
 
@@ -52,7 +57,7 @@ export function CreateFormDialog({ open, onClose }: Props) {
       });
       onClose();
       reset();
-      router.push(`/dashboard/forms/${form.id}`);
+      push(`/dashboard/forms/${form.id}`);
     },
     onError: (err) => {
       toast.push({
@@ -121,29 +126,40 @@ export function CreateFormDialog({ open, onClose }: Props) {
           <div className="flex items-start gap-2">
             <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-konoha-orange" />
             <div className="text-[11px] leading-relaxed text-muted-foreground">
-              Your scroll starts in <span className="text-foreground">draft mode</span>.
-              You&apos;ll add fields and customize the theme on the next screen,
-              then publish when it&apos;s ready.
+              Your scroll starts in{" "}
+              <span className="text-foreground">draft mode</span>. You&apos;ll
+              add fields and customize the theme on the next screen, then
+              publish when it&apos;s ready.
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <Link
+            href="/dashboard/forms/new"
             onClick={handleClose}
-            disabled={createForm.isPending}
-            className="h-10 rounded-md border border-konoha-forest/60 px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-konoha-orange hover:text-konoha-orange disabled:opacity-40"
+            className="flex h-10 items-center gap-2 rounded-md border border-konoha-forest/60 px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-konoha-orange hover:text-konoha-orange"
           >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={createForm.isPending || !title.trim()}
-            className="btn-rasengan flex h-10 items-center gap-2 rounded-md bg-gradient-to-br from-konoha-orange to-[#cc4400] px-5 font-heading text-xs uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(255,107,0,0.3)] transition-shadow hover:shadow-[0_0_30px_rgba(255,107,0,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-          >
-            {createForm.isPending ? "Forging…" : "Forge scroll"}
-          </button>
+            <LayoutTemplate className="h-3.5 w-3.5" />
+            Templates
+          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={createForm.isPending}
+              className="h-10 rounded-md border border-konoha-forest/60 px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-konoha-orange hover:text-konoha-orange disabled:opacity-40"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createForm.isPending || !title.trim()}
+              className="btn-rasengan flex h-10 items-center gap-2 rounded-md bg-gradient-to-br from-konoha-orange to-[#cc4400] px-5 font-heading text-xs uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(255,107,0,0.3)] transition-shadow hover:shadow-[0_0_30px_rgba(255,107,0,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            >
+              {createForm.isPending ? "Forging…" : "Forge scroll"}
+            </button>
+          </div>
         </div>
       </form>
     </Dialog>

@@ -149,7 +149,9 @@
 
 .konoha-rain {
   position: fixed;
-  inset: 0;
+  inset: -100px;
+  width: calc(100vw + 200px);
+  height: calc(100vh + 200px);
   z-index: -1;
   pointer-events: none;
   background-image: repeating-linear-gradient(
@@ -159,12 +161,13 @@
     rgba(255, 255, 255, 0.012) 60px,
     rgba(255, 255, 255, 0.012) 62px
   );
-  animation: rainFall 1s linear infinite;
+  animation: rainFall 1.5s linear infinite;
+  will-change: transform;
 }
 
 @keyframes rainFall {
-  from { background-position: 0 0; }
-  to { background-position: -60px 100px; }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-60px, 100px, 0); }
 }
 
 /* ============================================================

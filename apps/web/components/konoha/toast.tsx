@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { CheckCircle2, AlertTriangle, X } from "lucide-react";
 
 type ToastVariant = "success" | "error";
@@ -34,8 +41,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [remove],
   );
 
+  const ctx = useMemo(() => ({ push }), [push]);
+
   return (
-    <ToastContext.Provider value={{ push }}>
+    <ToastContext.Provider value={ctx}>
       {children}
       <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2">
         {toasts.map((t) => (
@@ -75,7 +84,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ))}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes toastIn {
           from { opacity: 0; transform: translateX(20px) scale(0.95); }
           to { opacity: 1; transform: translateX(0) scale(1); }

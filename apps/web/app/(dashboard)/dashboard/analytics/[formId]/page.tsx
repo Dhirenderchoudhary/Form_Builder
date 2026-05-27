@@ -46,11 +46,24 @@ export default function FormAnalyticsPage({ params }: Props) {
 
   if (formQuery.isLoading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
-        <Loader2 className="h-6 w-6 animate-spin text-konoha-orange" />
-        <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">
-          Reading the chakra…
-        </p>
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-4 w-24 bg-konoha-forest/20 rounded"></div>
+          <div className="h-8 w-40 bg-konoha-forest/20 rounded-md"></div>
+        </div>
+        <div className="mb-6">
+          <div className="h-3 w-16 bg-konoha-orange/20 rounded mb-2"></div>
+          <div className="h-8 w-64 bg-konoha-forest/20 rounded"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-konoha-forest/10 rounded-lg border border-konoha-forest/20"></div>
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 h-64 bg-konoha-forest/10 rounded-lg border border-konoha-forest/20"></div>
+          <div className="h-64 bg-konoha-forest/10 rounded-lg border border-konoha-forest/20"></div>
+        </div>
       </div>
     );
   }

@@ -4,11 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "dotenv -e ../../.env -- next dev --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "check-types": "next typegen && tsc --noEmit",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.1",
@@ -26,6 +27,7 @@
     "lucide-react": "^1.16.0",
     "next": "16.2.0",
     "postcss": "^8.5.15",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "resend": "^6.12.4",
@@ -39,6 +41,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.1",
     "typescript": "5.9.2"
   }

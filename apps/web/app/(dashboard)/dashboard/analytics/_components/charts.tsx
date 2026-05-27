@@ -269,7 +269,7 @@ export function BarList({
       {items.map((item, i) => {
         const pct = (item.count / max) * 100;
         return (
-          <li key={i} className="group relative">
+          <li key={item.label || `item-${i}`} className="group relative">
             <div
               className="absolute inset-y-0 left-0 rounded bg-konoha-orange/10 transition-all group-hover:bg-konoha-orange/20"
               style={{ width: `${pct}%` }}

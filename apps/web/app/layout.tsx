@@ -4,6 +4,20 @@ import { Providers } from "@/providers";
 import { KonohaAtmosphere } from "@/components/konoha/atmosphere";
 import "./globals.css";
 
+import { Cinzel, Noto_Sans_JP } from "next/font/google";
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-cinzel",
+});
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700", "900"],
+  variable: "--font-noto-sans-jp",
+});
+
 export const metadata: Metadata = {
   title: "Hidden Leaf Forms — Forge your jutsu",
   description:
@@ -23,26 +37,14 @@ export default function RootLayout({
           colorText: "#F0E6C8",
           colorTextOnPrimaryBackground: "#FFFFFF",
           colorNeutral: "#8A9A7A",
-          fontFamily: "Cinzel, serif",
+          fontFamily: "var(--font-cinzel), serif",
         },
         elements: {
           card: "border border-konoha-forest",
         },
       }}
     >
-      <html lang="en" className="dark">
-        <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap"
-          />
-        </head>
+      <html lang="en" className={`dark ${cinzel.variable} ${notoSansJP.variable}`}>
         <body className="antialiased">
           <KonohaAtmosphere />
           <Providers>{children}</Providers>

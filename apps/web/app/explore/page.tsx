@@ -68,7 +68,7 @@ export default function PublicExplorePage() {
               KONOHA · FORM SCROLLS
             </span>
           </div>
-          <p>© {new Date().getFullYear()} Hidden Leaf Division</p>
+          <p suppressHydrationWarning>© {new Date().getFullYear()} Hidden Leaf Division</p>
         </div>
       </footer>
     </div>

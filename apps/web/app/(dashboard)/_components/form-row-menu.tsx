@@ -9,6 +9,7 @@ import {
   Lock,
   Trash2,
   Pencil,
+  Copy,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useToast } from "@/components/konoha/toast";
@@ -90,11 +91,30 @@ export function FormRowMenu({
     },
   });
 
+  const clone = trpc.forms.clone.useMutation({
+    onSuccess: async (data) => {
+      await utils.forms.list.invalidate();
+      toast.push({
+        variant: "success",
+        title: "Scroll cloned",
+        message: "A copy has been added to your archive.",
+      });
+      // Navigate to the cloned form
+      window.location.href = `/dashboard/forms/${data.id}`;
+    },
+    onError: (err) => {
+      toast.push({
+        variant: "error",
+        title: "Clone failed",
+        message: err.message?.slice(0, 120) ?? "Try again.",
+      });
+    },
+  });
+
   const isPublished = status === "published";
 
   const copyLink = () => {
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/f/${formSlug}`;
     navigator.clipboard
       .writeText(url)
@@ -133,6 +153,7 @@ export function FormRowMenu({
       {open && (
         <div
           role="menu"
+          tabIndex={0}
           className="absolute right-0 top-full z-20 mt-1.5 min-w-[200px] overflow-hidden rounded-md border border-konoha-forest/60 bg-konoha-ink/95 shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md animate-[menuIn_0.15s_ease]"
           onClick={(e) => {
             e.preventDefault();
@@ -158,7 +179,11 @@ export function FormRowMenu({
                   setOpen(false);
                 }}
               />
-              <MenuItem icon={Link2} label="Copy public link" onClick={copyLink} />
+              <MenuItem
+                icon={Link2}
+                label="Copy public link"
+                onClick={copyLink}
+              />
               <MenuItem
                 icon={Lock}
                 label="Seal scroll"
@@ -185,6 +210,16 @@ export function FormRowMenu({
           <div className="my-1 border-t border-konoha-forest/40" />
 
           <MenuItem
+            icon={Copy}
+            label="Clone scroll"
+            onClick={() => {
+              clone.mutate({ formId });
+              setOpen(false);
+            }}
+            disabled={clone.isPending}
+          />
+
+          <MenuItem
             icon={Trash2}
             label="Archive"
             danger
@@ -196,7 +231,7 @@ export function FormRowMenu({
         </div>
       )}
 
-      <style jsx global>{`
+      <style>{`
         @keyframes menuIn {
           from { opacity: 0; transform: translateY(-4px) scale(0.97); }
           to { opacity: 1; transform: translateY(0) scale(1); }

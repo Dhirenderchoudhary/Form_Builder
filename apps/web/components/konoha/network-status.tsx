@@ -18,14 +18,16 @@ export function NetworkStatus() {
 
     const ping = async () => {
       try {
-        const res = await fetch("/api/backend/health", {
-          headers: { "ngrok-skip-browser-warning": "true" },
+        const res = await fetch("/api/backend/health.check", {
+          headers: { "Content-Type": "application/json" },
         });
         if (!res.ok) throw new Error(String(res.status));
         const json = await res.json();
         if (cancelled) return;
         setStatus("online");
-        setUptime(json?.data?.uptime ?? json?.uptime ?? null);
+        // tRPC wraps the result in { result: { data: { ... } } }
+        const data = json?.result?.data ?? json?.data ?? json;
+        setUptime(data?.uptime ?? null);
       } catch {
         if (cancelled) return;
         setStatus("offline");

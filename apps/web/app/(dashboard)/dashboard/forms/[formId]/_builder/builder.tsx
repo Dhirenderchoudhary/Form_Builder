@@ -42,6 +42,7 @@ export function Builder({ formId }: Props) {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [rightPane, setRightPane] = useState<RightPane>("settings");
   const [previewMode, setPreviewMode] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"canvas" | "inspector">("canvas");
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [savingForm, setSavingForm] = useState(false);
 
@@ -477,10 +478,38 @@ export function Builder({ formId }: Props) {
         )}
       </div>
 
+      {/* Mobile view sub-navigation toggle */}
+      {!previewMode && (
+        <div className="flex border-b border-konoha-forest/40 bg-konoha-ink/40 p-1 lg:hidden mx-4 mt-3 rounded border">
+          <button
+            type="button"
+            onClick={() => setMobileTab("canvas")}
+            className={`flex-1 text-center py-2 text-[10px] uppercase tracking-[0.2em] font-heading rounded transition-colors ${
+              mobileTab === "canvas"
+                ? "bg-konoha-orange/15 text-konoha-orange font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Parchment
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("inspector")}
+            className={`flex-1 text-center py-2 text-[10px] uppercase tracking-[0.2em] font-heading rounded transition-colors ${
+              mobileTab === "inspector"
+                ? "bg-konoha-orange/15 text-konoha-orange font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Scroll Settings
+          </button>
+        </div>
+      )}
+
       {/* Body */}
       <div className="flex-1 grid gap-6 px-4 py-6 md:px-8 md:py-8 lg:grid-cols-[1fr_360px]">
         {/* Canvas */}
-        <div className="min-w-0">
+        <div className={`min-w-0 ${!previewMode && mobileTab !== "canvas" ? "hidden lg:block" : "block"}`}>
           {previewMode ? (
             <PreviewView form={form} />
           ) : (
@@ -492,6 +521,7 @@ export function Builder({ formId }: Props) {
               onSelectField={(id) => {
                 setSelectedFieldId(id);
                 setRightPane("field");
+                setMobileTab("inspector");
               }}
               onDuplicate={handleDuplicateField}
               onDelete={handleDeleteField}
@@ -503,6 +533,7 @@ export function Builder({ formId }: Props) {
               onSelectFormSettings={() => {
                 setSelectedFieldId(null);
                 setRightPane("settings");
+                setMobileTab("inspector");
               }}
             />
           )}
@@ -510,7 +541,7 @@ export function Builder({ formId }: Props) {
 
         {/* Inspector */}
         {!previewMode && (
-          <aside className="lg:sticky lg:top-32 lg:self-start">
+          <aside className={`lg:sticky lg:top-32 lg:self-start ${mobileTab !== "inspector" ? "hidden lg:block" : "block"}`}>
             <div className="scroll-card overflow-hidden">
               {/* Tabs */}
               <div className="flex border-b border-konoha-forest/40">

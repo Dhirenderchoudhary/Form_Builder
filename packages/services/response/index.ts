@@ -67,6 +67,52 @@ export class ResponseService extends BaseService {
       await db.insert(responseAnswersTable).values(answerRows);
     }
 
+    try {
+      const { usersTable } = await import("@repo/database/models/user");
+      const { EmailService } = await import("../email");
+      
+      const [formInfo] = await db
+        .select({
+          form: formsTable,
+          owner: usersTable,
+        })
+        .from(formsTable)
+        .innerJoin(usersTable, eq(formsTable.userId, usersTable.id))
+        .where(eq(formsTable.id, formId));
+
+      if (formInfo && process.env.RESEND_API_KEY) {
+        const emailService = new EmailService({
+          apiKey: process.env.RESEND_API_KEY,
+          fromAddress: process.env.EMAIL_FROM ?? "noreply@konoha-forms.com",
+          appName: process.env.APP_NAME ?? "Konoha Forms",
+        });
+
+        // Notify creator asynchronously (don't block submission)
+        void emailService.sendNewResponseNotification({
+          creatorEmail: formInfo.owner.email,
+          creatorName: formInfo.owner.fullName,
+          formTitle: formInfo.form.title,
+          formSlug: formInfo.form.slug,
+          responseId: response.id,
+          respondentEmail: responseData.respondentEmail,
+          submittedAt: response.submittedAt ?? new Date(),
+          dashboardUrl: process.env.WEB_URL ?? "http://localhost:3000/dashboard",
+        });
+
+        // Send confirmation receipt to respondent
+        if (responseData.respondentEmail) {
+          void emailService.sendRespondentConfirmation({
+            respondentEmail: responseData.respondentEmail,
+            formTitle: formInfo.form.title,
+            successMessage: formInfo.form.successMessage ?? "Thank you for your response!",
+            appName: process.env.APP_NAME ?? "Konoha Forms",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to trigger emails", error);
+    }
+
     return response;
   }
 

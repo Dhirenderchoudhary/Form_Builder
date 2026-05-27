@@ -10,6 +10,9 @@ import { getEmailService } from "../../services/email";
 const TAGS = ["Public"];
 const getPath = generatePath("/public");
 
+// Simple memory-based rate limiting for Serverless Edge environments
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
 /**
  * SHA-256 hex digest. Cheap, deterministic, doesn't require bcrypt.
  * Forms are not bank vaults — this is a soft access gate.
@@ -96,7 +99,22 @@ export const publicRouter = router({
     })
     .input(submitResponseSchema.extend({ password: z.string().optional() }))
     .output(z.object({ responseId: z.string().uuid(), message: z.string() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
+      const ip = ctx.ipAddress ?? "unknown_ip";
+      
+      // Basic spam protection (5 submissions per minute per IP)
+      const now = Date.now();
+      const record = rateLimitMap.get(ip);
+      if (!record || record.resetTime < now) {
+        rateLimitMap.set(ip, { count: 1, resetTime: now + 60000 });
+      } else if (record.count > 5) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Too many submissions. Please wait a moment.",
+        });
+      } else {
+        record.count++;
+      }
 
       let form: Awaited<ReturnType<typeof formService.getPublicFormBySlug>>;
       try {
@@ -121,8 +139,7 @@ export const publicRouter = router({
         }
       }
 
-      const ip = ctx.ipAddress;
-      if (form.settings?.oneResponsePerIp && ip) {
+      if (form.settings?.oneResponsePerIp && ip !== "unknown_ip") {
         const already = await responseService.hasIpAlreadySubmitted(form.id, ip);
         if (already) {
           throw new TRPCError({

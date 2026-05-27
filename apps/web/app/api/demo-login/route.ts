@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function GET() {
   const cookieStore = await cookies();
   cookieStore.set("demo_session", "true", {
     path: "/",
@@ -14,8 +14,4 @@ export async function POST() {
   });
 
   redirect("/dashboard");
-}
-
-export async function GET() {
-  redirect("/");
 }

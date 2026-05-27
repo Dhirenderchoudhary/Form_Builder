@@ -55,6 +55,18 @@ export function Header() {
           >
             Chunin Exam
           </Link>
+          <Link
+            href="/api/docs"
+            className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-konoha-orange"
+          >
+            API Docs
+          </Link>
+          <Link
+            href="/pricing"
+            className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-konoha-orange"
+          >
+            Pricing
+          </Link>
         </nav>
 
         {/* Auth & Mobile Menu */}
@@ -147,6 +159,13 @@ export function Header() {
             >
               Training
             </a>
+            <Link
+              href="/api/docs"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-konoha-orange"
+            >
+              API Docs
+            </Link>
           </nav>
           
           <div className="border-t border-konoha-forest/30 pt-4 flex flex-col gap-3">

@@ -214,6 +214,42 @@ export function FormSettings({ form, onChange }: Props) {
         </label>
       </div>
 
+      <div className="flex flex-col gap-4 border-t border-konoha-forest/30 pt-4">
+        <label className="flex flex-col gap-2">
+          <span className={labelCls}>Password Protection</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              placeholder={form.settings?.passwordHash ? "••••••••" : "Enter a password..."}
+              className={`${inputCls} text-xs`}
+              onBlur={async (e) => {
+                const val = e.target.value;
+                if (!val) return;
+                const msgBuffer = new TextEncoder().encode(val);
+                const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+                
+                onChange({ settings: { ...form.settings, passwordHash: hash } });
+                e.target.value = ""; // clear after saving
+              }}
+            />
+            {form.settings?.passwordHash && (
+              <button
+                type="button"
+                onClick={() => onChange({ settings: { ...form.settings, passwordHash: undefined } })}
+                className="shrink-0 text-[9px] uppercase tracking-[0.2em] text-konoha-akatsuki hover:text-konoha-akatsuki/80"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70">
+            Require a password to access the form.
+          </p>
+        </label>
+      </div>
+
       {/* Theme picker */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

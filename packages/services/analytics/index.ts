@@ -108,13 +108,13 @@ export class AnalyticsService extends BaseService {
 
     const dailySubmissions = await db
       .select({
-        date: sql<string>`DATE(${formAnalyticsTable.occurredAt})`,
+        date: sql<string>`${formAnalyticsTable.occurredAt}::date`,
         count: count(),
       })
       .from(formAnalyticsTable)
       .where(and(timeFilter, eq(formAnalyticsTable.event, "submit")))
-      .groupBy(sql`DATE(${formAnalyticsTable.occurredAt})`)
-      .orderBy(sql`DATE(${formAnalyticsTable.occurredAt})`);
+      .groupBy(sql`${formAnalyticsTable.occurredAt}::date`)
+      .orderBy(sql`${formAnalyticsTable.occurredAt}::date`);
 
     const totalViews = byEvent["view"] ?? 0;
     const totalStarts = byEvent["start"] ?? 0;

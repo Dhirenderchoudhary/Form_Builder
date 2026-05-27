@@ -138,34 +138,34 @@ export default async function HomePage() {
               ship.
             </p>
 
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 pt-2 w-full sm:w-auto">
               {isSignedIn ? (
-                <Link href="/dashboard">
+                <Link href="/dashboard" className="w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
+                    className="btn-rasengan w-full gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
                   >
                     Hokage&apos;s Desk
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
               ) : (
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                   <SignUpButton mode="modal">
                     <Button
                       size="lg"
-                      className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
+                      className="btn-rasengan w-full gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
                     >
                       Begin training
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </SignUpButton>
 
-                  <Link href="/api/demo-login">
+                  <Link href="/api/demo-login" className="w-full sm:w-auto">
                     <Button
                       variant="outline"
                       size="lg"
-                      className="gap-2 border-konoha-orange text-konoha-orange font-heading uppercase tracking-[0.18em] hover:bg-konoha-orange/15"
+                      className="w-full gap-2 border-konoha-orange text-konoha-orange font-heading uppercase tracking-[0.18em] hover:bg-konoha-orange/15"
                     >
                       Try Sandbox Demo
                       <ArrowRight className="h-4 w-4" />
@@ -174,11 +174,11 @@ export default async function HomePage() {
                 </div>
               )}
 
-              <Link href="/naruto">
+              <Link href="/naruto" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="gap-2 border-konoha-forest font-heading uppercase tracking-[0.18em] hover:border-konoha-orange hover:text-konoha-orange"
+                  className="w-full gap-2 border-konoha-forest font-heading uppercase tracking-[0.18em] hover:border-konoha-orange hover:text-konoha-orange"
                 >
                   <ScrollText className="h-4 w-4" />
                   See the Chunin Exam
@@ -200,12 +200,12 @@ export default async function HomePage() {
           </div>
 
           {/* Right — Rasengan + headband */}
-          <div className="lg:col-span-5 relative flex flex-col items-center gap-8">
+          <div className="lg:col-span-5 relative flex flex-col items-center gap-6 md:gap-8 mt-8 lg:mt-0">
             <div className="relative">
               <div className="absolute inset-0 -z-10 animate-chakra-pulse rounded-full bg-konoha-chakra/20 blur-3xl" />
-              <Rasengan size={260} />
+              <Rasengan className="w-[160px] sm:w-[200px] md:w-[260px] h-auto" />
             </div>
-            <Headband size={300} className="opacity-90" />
+            <Headband className="w-[200px] sm:w-[240px] md:w-[300px] h-auto opacity-90" />
           </div>
         </div>
       </section>

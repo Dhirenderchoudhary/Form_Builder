@@ -108,7 +108,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           {/* Glowing Demo Sandbox Badge */}
           {me?.clerkId === "clerk_demo_shinobi" && (
-            <div className="hidden items-center gap-1.5 rounded-full border border-konoha-orange/40 bg-konoha-orange/10 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-konoha-orange shadow-[0_0_12px_rgba(255,107,0,0.15)] sm:flex">
+            <div className="flex items-center gap-1.5 rounded-full border border-konoha-orange/40 bg-konoha-orange/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.2em] text-konoha-orange shadow-[0_0_12px_rgba(255,107,0,0.15)]">
               <span className="h-1.5 w-1.5 rounded-full bg-konoha-orange shadow-[0_0_6px_#FF6B00] animate-pulse" />
               Demo Sandbox
             </div>

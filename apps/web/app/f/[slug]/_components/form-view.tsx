@@ -322,7 +322,7 @@ export function FormView({ slug }: Props) {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} noValidate className="scroll-card p-6 md:p-10">
+      <form onSubmit={handleSubmit} noValidate className="scroll-card p-4 sm:p-6 md:p-10">
         <div className="space-y-6">
           {form.fields
             .slice()

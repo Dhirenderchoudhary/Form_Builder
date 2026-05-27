@@ -1,0 +1,19 @@
+{
+  "name": "@repo/trpc",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/services": "workspace:*",
+
+    "dotenv-cli": "^11.0.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@trpc/client": "^11.8.1",
+    "@trpc/server": "^11.8.1",
+    "trpc-to-openapi": "^3.2.0",
+    "zod": "^4.4.3"
+  }
+}

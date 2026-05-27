@@ -1,0 +1,10 @@
+{
+  // Use the workspace TypeScript instead of VS Code's bundled version
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Recommended for pnpm monorepos
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Help VS Code find types across packages
+  "typescript.preferences.includePackageJsonAutoImports": "on"
+}

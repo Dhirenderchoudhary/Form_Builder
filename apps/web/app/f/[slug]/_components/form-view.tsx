@@ -194,9 +194,13 @@ export function FormView({ slug }: Props) {
 
     setErrors({});
 
-    const answers = state.form.fields
-      .map((f) => ({ fieldId: f.id, value: values[f.id] ?? null }))
-      .filter((a) => a.value !== null && a.value !== "" && !(Array.isArray(a.value) && a.value.length === 0));
+    const answers: Array<{ fieldId: string; value: AnswerValue }> = [];
+    for (const f of state.form.fields) {
+      const val = values[f.id] ?? null;
+      if (val !== null && val !== "" && !(Array.isArray(val) && val.length === 0)) {
+        answers.push({ fieldId: f.id, value: val });
+      }
+    }
 
     if (answers.length === 0) {
       setServerError("Please answer at least one field.");

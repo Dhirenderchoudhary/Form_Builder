@@ -13,11 +13,13 @@
   "dependencies": {
     "@clerk/nextjs": "^7.4.1",
     "@radix-ui/react-slot": "^1.2.4",
+    "@repo/services": "workspace:^",
     "@repo/trpc": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "^5.100.14",
     "@trpc/client": "^11.8.1",
     "@trpc/react-query": "^11.17.0",
+    "@trpc/server": "^11.8.1",
     "autoprefixer": "^10.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,6 +28,8 @@
     "postcss": "^8.5.15",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "resend": "^6.12.4",
+    "svix": "^1.94.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^3"
   },

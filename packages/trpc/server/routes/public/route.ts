@@ -176,7 +176,7 @@ export const publicRouter = router({
             respondentEmail: input.respondentEmail,
             formTitle: form.title,
             successMessage: form.successMessage ?? "Thank you for your response!",
-            appName: process.env["APP_NAME"] ?? "FormCraft",
+            appName: process.env["APP_NAME"] ?? "Konoha Forms",
           })
           .catch(() => void 0);
       }

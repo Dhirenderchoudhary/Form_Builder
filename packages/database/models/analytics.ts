@@ -12,10 +12,10 @@ import {
 import { formsTable } from "./form";
 
 export const analyticsEventEnum = pgEnum("analytics_event", [
-  "view",         "view",
-  "start",        "start",
-  "submit",       "submit",
-  "abandon",      "abandon",
+  "view",
+  "start",
+  "submit",
+  "abandon",
 ]);
 
 export const formAnalyticsTable = pgTable(

@@ -96,10 +96,10 @@ export function FormsList({ full = false }: FormsListProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<FormRow | null>(null);
 
-  // Auto-open the create dialog when ?new=1 is in the URL.
+  // Auto-open the create dialog when ?new=1 or ?create=true is in the URL.
   // Strips the param after opening so back/forward doesn't re-trigger.
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
+    if (searchParams.get("new") === "1" || searchParams.get("create") === "true") {
       setCreateOpen(true);
       router.replace(pathname, { scroll: false });
     }

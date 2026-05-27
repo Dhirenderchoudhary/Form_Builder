@@ -10,7 +10,6 @@ import { Sidebar } from "./sidebar";
 
 /**
  * Dashboard shell — sidebar + topbar + content area.
- * Inspired by AxeForm's "Captain's Cabin", reimagined as Konoha's
  * "Hokage's Office" command center.
  */
 export function DashboardShell({ children }: { children: React.ReactNode }) {

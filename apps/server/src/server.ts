@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { clerkMiddleware, getAuth } from "@clerk/express";
+import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to-openapi";
@@ -19,6 +19,9 @@ import {
 } from "./middleware/security.js";
 import { ApiResponse } from "./lib/api-response.js";
 import { env } from "./env.js";
+import UserService from "@repo/services/user";
+
+const userService = new UserService();
 
 export const app = express();
 
@@ -96,14 +99,37 @@ app.use("/docs", async (req, res, next) => {
   })(req as any, res, next);
 });
 
-const createContext = ({ req }: CreateExpressContextOptions) =>
-  createBaseContext({
-    userId: getAuth(req).userId ?? null,
+const createContext = async ({ req }: CreateExpressContextOptions) => {
+  const auth = getAuth(req);
+
+  if (auth.userId) {
+    const existingUser = await userService.getUserByClerkId(auth.userId);
+
+    if (!existingUser) {
+      const clerkUser = await clerkClient.users.getUser(auth.userId);
+      const primaryEmail =
+        clerkUser.emailAddresses.find((email) => email.id === clerkUser.primaryEmailAddressId)
+        ?? clerkUser.emailAddresses[0];
+
+      if (primaryEmail) {
+        await userService.upsertUser({
+          clerkId: auth.userId,
+          fullName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || null,
+          email: primaryEmail.emailAddress,
+          profileImageUrl: clerkUser.imageUrl,
+        });
+      }
+    }
+  }
+
+  return createBaseContext({
+    userId: auth.userId ?? null,
     requestId: req.requestId,
     ipAddress: (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
       ?? req.ip
       ?? "unknown",
   });
+};
 
 app.use("/api", generalRateLimit);
 

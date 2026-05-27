@@ -18,20 +18,20 @@ export const formVisibilityEnum = pgEnum("form_visibility", ["public", "unlisted
 export const formStatusEnum = pgEnum("form_status", ["draft", "published", "closed", "archived"]);
 
 export const fieldTypeEnum = pgEnum("field_type", [
-  "short_text",     "short_text",
-  "long_text",      "long_text",
-  "email",          "email",
-  "number",         "number",
-  "phone",          "phone",
-  "url",            "url",
-  "date",           "date",
-  "time",           "time",
-  "select",         "select",
-  "multi_select",   "multi_select",
-  "checkbox",       "checkbox",
-  "rating",         "rating",
-  "scale",          "scale",
-  "file_upload",    "file_upload",
+  "short_text",
+  "long_text",
+  "email",
+  "number",
+  "phone",
+  "url",
+  "date",
+  "time",
+  "select",
+  "multi_select",
+  "checkbox",
+  "rating",
+  "scale",
+  "file_upload",
 ]);
 
 export const formsTable = pgTable(

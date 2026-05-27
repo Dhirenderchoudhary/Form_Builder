@@ -14,11 +14,11 @@ export const authRouter = router({
     .input(zodUndefinedModel)
     .output(getMeOutputModel)
     .query(async ({ ctx }) => {
-      const user = await userService.getUserByClerkId(ctx.auth.userId);
+      const user = await userService.getUserById(ctx.auth.userId);
       if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found — webhook may not have fired yet",
+          message: "User not found",
         });
       }
       return user;

@@ -7,10 +7,6 @@ import { useAuth } from "@clerk/nextjs";
 import { trpc } from "@/lib/trpc";
 import { ToastProvider } from "@/components/konoha/toast";
 
-function getApiUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-}
-
 export function Providers({ children }: { children: React.ReactNode }) {
   const { getToken } = useAuth();
 
@@ -30,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: `${getApiUrl()}/api/trpc`,
+          url: "/api/backend",
           headers: async () => {
             // Attach Clerk session token so protected procedures pass.
             // getToken returns null when signed out — that's fine for public routes.

@@ -10,9 +10,9 @@ const envSchema = z.object({
   CLERK_PUBLISHABLE_KEY: z.string(),
 
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().email().default("noreply@formbuilder.dev"),
+  EMAIL_FROM: z.string().email().default("noreply@konohaforms.app"),
 
-  APP_NAME: z.string().default("FormCraft"),
+  APP_NAME: z.string().default("Konoha Forms"),
   WEB_URL: z.string().default("http://localhost:3000"),
 });
 

@@ -15,11 +15,10 @@ export function NetworkStatus() {
 
   useEffect(() => {
     let cancelled = false;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
     const ping = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/health`, {
+        const res = await fetch("/api/backend/health", {
           headers: { "ngrok-skip-browser-warning": "true" },
         });
         if (!res.ok) throw new Error(String(res.status));

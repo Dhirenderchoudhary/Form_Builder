@@ -122,7 +122,7 @@ export default async function HomePage() {
               </span>
             </div>
 
-            <h1 className="font-heading text-5xl font-black leading-[0.95] tracking-tight md:text-6xl lg:text-[5.5rem]">
+            <h1 className="font-heading text-4xl font-black leading-[0.95] tracking-tight sm:text-5xl md:text-6xl lg:text-[5.5rem]">
               <span className="block text-foreground/90">Forms</span>
               <span className="block">
                 forged with the
@@ -333,7 +333,7 @@ export default async function HomePage() {
           DEMO CTA — points to /naruto form
           ------------------------------------------------------------------ */}
       <section className="relative z-10 container mx-auto px-6 py-24">
-        <div className="scroll-card relative overflow-hidden p-10 md:p-16">
+        <div className="scroll-card relative overflow-hidden p-6 sm:p-10 md:p-16">
           <div aria-hidden className="pointer-events-none absolute -right-20 -top-20 opacity-[0.07]">
             <KonohaLeaf size={420} color="#FF6B00" />
           </div>

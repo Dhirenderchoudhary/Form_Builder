@@ -82,6 +82,98 @@ const themes = [
       mono: "ui-monospace",
     },
   },
+  {
+    name: "Stark",
+    slug: "stark",
+    description:
+      "Ice-cold minimalism. Clean whites, steel greys, and frost-blue accents. For those who value clarity above all.",
+    category: "modern",
+    isActive: true,
+    colors: {
+      primary: "#3B82F6",
+      background: "#09090B",
+      surface: "#18181B",
+      text: "#FAFAFA",
+      textMuted: "#A1A1AA",
+      accent: "#06B6D4",
+      border: "#27272A",
+      error: "#EF4444",
+    },
+    fonts: {
+      heading: "Inter",
+      body: "Inter",
+      mono: "JetBrains Mono",
+    },
+  },
+  {
+    name: "Ember",
+    slug: "ember",
+    description:
+      "Volcanic warmth. Molten oranges, deep crimsons, and ash-grey undertones. Forms that burn with intensity.",
+    category: "warm",
+    isActive: true,
+    colors: {
+      primary: "#F97316",
+      background: "#0C0A09",
+      surface: "#1C1917",
+      text: "#FAFAF9",
+      textMuted: "#A8A29E",
+      accent: "#EF4444",
+      border: "#292524",
+      error: "#DC2626",
+    },
+    fonts: {
+      heading: "Outfit",
+      body: "DM Sans",
+      mono: "Fira Code",
+    },
+  },
+  {
+    name: "Ocean Depths",
+    slug: "ocean",
+    description:
+      "Deep-sea tranquility. Navy blues, teal accents, and bioluminescent highlights. Calm, collected, professional.",
+    category: "cool",
+    isActive: true,
+    colors: {
+      primary: "#0EA5E9",
+      background: "#020617",
+      surface: "#0F172A",
+      text: "#F8FAFC",
+      textMuted: "#94A3B8",
+      accent: "#2DD4BF",
+      border: "#1E293B",
+      error: "#F43F5E",
+    },
+    fonts: {
+      heading: "Plus Jakarta Sans",
+      body: "Plus Jakarta Sans",
+      mono: "IBM Plex Mono",
+    },
+  },
+  {
+    name: "Midnight Blossom",
+    slug: "blossom",
+    description:
+      "Elegant and refined. Deep purples, soft pinks, and gold leaf accents. Cherry blossoms under a moonlit sky.",
+    category: "elegant",
+    isActive: true,
+    colors: {
+      primary: "#A855F7",
+      background: "#0A0118",
+      surface: "#140B24",
+      text: "#FAF5FF",
+      textMuted: "#C084FC",
+      accent: "#EC4899",
+      border: "#2E1065",
+      error: "#F43F5E",
+    },
+    fonts: {
+      heading: "Playfair Display",
+      body: "Lora",
+      mono: "ui-monospace",
+    },
+  },
 ];
 
 async function main() {

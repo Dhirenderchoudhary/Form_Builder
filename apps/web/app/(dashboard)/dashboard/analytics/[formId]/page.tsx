@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -34,13 +34,13 @@ export default function FormAnalyticsPage({ params }: Props) {
 
   const formQuery = trpc.forms.get.useQuery({ formId });
 
-  const rangeFilter = (() => {
+  const rangeFilter = useMemo(() => {
     const days = RANGES.find((r) => r.id === range)?.days ?? 0;
     if (days === 0) return {};
     const from = new Date();
     from.setDate(from.getDate() - days);
     return { from: from.toISOString() };
-  })();
+  }, [range]);
 
   const analyticsQuery = trpc.forms.analytics.useQuery({ formId, ...rangeFilter });
 

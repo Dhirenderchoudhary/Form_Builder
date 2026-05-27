@@ -30,22 +30,6 @@ interface Props {
 
 type RightPane = "field" | "settings";
 
-/**
- * Form builder — the heart of Konoha Forms.
- *
- * Layout:
- *   ┌────── topbar (title, status, preview/edit, publish) ──────┐
- *   │                                                            │
- *   │  Canvas (scrollable)        │  Inspector (sticky)         │
- *   │  - Form header               │  - Selected field config    │
- *   │  - Field cards (drag-drop)   │  - OR form-level settings   │
- *   │  - "Add field" popover       │                             │
- *   │                                                            │
- *   └────────────────────────────────────────────────────────────┘
- *
- * Autosave: field-level updates fire the tRPC mutation immediately.
- * Form-level settings batch via a 600ms debounce.
- */
 export function Builder({ formId }: Props) {
   const router = useRouter();
   const toast = useToast();

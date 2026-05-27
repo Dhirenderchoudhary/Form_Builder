@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { DashboardShell } from "./_components/shell";
 
 /**
@@ -13,7 +14,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { userId } = await auth();
-  if (!userId) {
+  const cookieStore = await cookies();
+  const isDemo = cookieStore.get("demo_session")?.value === "true";
+
+  if (!userId && !isDemo) {
     redirect("/");
   }
 

@@ -29,7 +29,6 @@ export class EmailService {
 
     if (opts.apiKey) {
 
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
       const tryResend = async () => {
         try {
                     // @ts-ignore — resend is an optional runtime dep

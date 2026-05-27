@@ -9,11 +9,7 @@ type Env = z.infer<typeof envSchema>;
 
 let _env: Env | undefined;
 
-/**
- * Lazily validate and return env vars.
- * Deferred so the module can be imported at build-time (e.g. Next.js
- * static analysis) without crashing when DATABASE_URL is absent.
- */
+
 export const env: Env = new Proxy({} as Env, {
   get(_target, prop: string) {
     if (!_env) {

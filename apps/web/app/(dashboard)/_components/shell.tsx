@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Bell, Search, Plus, Menu } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 import { KonohaLeaf } from "@/components/konoha/leaf";
 import { Sidebar } from "./sidebar";
 
@@ -15,6 +16,7 @@ import { Sidebar } from "./sidebar";
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { data: me } = trpc.auth.getMe.useQuery();
 
   // Build breadcrumb crumbs from pathname segments
   const segments = pathname.split("/").filter(Boolean);
@@ -104,14 +106,46 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-konoha-orange shadow-[0_0_6px_#FF6B00]" />
           </button>
 
+          {/* Glowing Demo Sandbox Badge */}
+          {me?.clerkId === "clerk_demo_shinobi" && (
+            <div className="hidden items-center gap-1.5 rounded-full border border-konoha-orange/40 bg-konoha-orange/10 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-konoha-orange shadow-[0_0_12px_rgba(255,107,0,0.15)] sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-konoha-orange shadow-[0_0_6px_#FF6B00] animate-pulse" />
+              Demo Sandbox
+            </div>
+          )}
+
           {/* Avatar */}
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8 ring-2 ring-konoha-orange/40 hover:ring-konoha-orange",
-              },
-            }}
-          />
+          {me?.clerkId === "clerk_demo_shinobi" ? (
+            <div className="relative group">
+              <button
+                type="button"
+                className="h-8 w-8 overflow-hidden rounded-full ring-2 ring-konoha-orange shadow-[0_0_12px_rgba(255,107,0,0.4)] transition-all hover:ring-konoha-gold flex items-center justify-center bg-gradient-to-br from-konoha-orange to-[#cc4400]"
+              >
+                <span className="font-heading text-xs font-bold text-white uppercase">D</span>
+              </button>
+              
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-konoha-forest/60 bg-konoha-ink p-2 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-150 origin-top-right shadow-[0_4px_24px_rgba(0,0,0,0.8)] z-50">
+                <div className="px-2 py-1.5 border-b border-konoha-forest/30 mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-konoha-orange">Demo Shinobi</p>
+                  <p className="text-[9px] text-muted-foreground truncate">{me.email}</p>
+                </div>
+                <a
+                  href="/api/demo-logout"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-konoha-akatsuki hover:bg-konoha-akatsuki/10 transition-colors"
+                >
+                  Exit Demo Mode
+                </a>
+              </div>
+            </div>
+          ) : (
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-8 w-8 ring-2 ring-konoha-orange/40 hover:ring-konoha-orange",
+                },
+              }}
+            />
+          )}
         </header>
 
         {/* Content */}

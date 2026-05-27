@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { FormsList } from "@/app/(dashboard)/_components/forms-list";
 
 export const metadata = {
@@ -21,7 +22,15 @@ export default function FormsPage() {
         </p>
       </section>
 
-      <FormsList full />
+      <Suspense
+        fallback={
+          <div className="flex h-40 items-center justify-center text-xs uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+            Unsealing Scroll Archive…
+          </div>
+        }
+      >
+        <FormsList full />
+      </Suspense>
     </div>
   );
 }

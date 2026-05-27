@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { ScrollText, Inbox, Radio, TrendingUp, Compass, ArrowRight } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -137,7 +138,15 @@ export default function DashboardHomePage() {
           </div>
         </div>
 
-        <FormsList />
+        <Suspense
+          fallback={
+            <div className="flex h-32 items-center justify-center text-xs uppercase tracking-[0.2em] text-muted-foreground animate-pulse border border-konoha-forest/30 bg-konoha-ink/40 rounded-lg">
+              Unrolling Active Mission Scrolls…
+            </div>
+          }
+        >
+          <FormsList />
+        </Suspense>
       </section>
 
       {/* Explore suggestions */}

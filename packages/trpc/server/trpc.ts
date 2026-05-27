@@ -22,7 +22,9 @@ export const protectedProcedure = tRPCContext.procedure.use(async ({ ctx, next }
     });
   }
 
-  const user = await userService.getUserByClerkId(ctx.auth.userId);
+  // Use the cached dbUser if available, otherwise fetch from database
+  // @ts-ignore — dbUser is an optional cached property on context
+  const user = ctx.auth.dbUser || await userService.getUserByClerkId(ctx.auth.userId);
   if (!user) {
     throw new TRPCError({
       code: "NOT_FOUND",
@@ -36,6 +38,7 @@ export const protectedProcedure = tRPCContext.procedure.use(async ({ ctx, next }
       auth: {
         userId: user.id,
         clerkId: ctx.auth.userId,
+        dbUser: user,
       },
     },
   });

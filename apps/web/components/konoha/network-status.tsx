@@ -4,11 +4,7 @@ import { useEffect, useState } from "react";
 
 type Status = "checking" | "online" | "offline";
 
-/**
- * Tiny status pill that pings the backend health endpoint.
- * Uses fetch (REST passthrough on the tRPC OpenAPI middleware) so
- * we don't need to wire the full tRPC client just to prove connectivity.
- */
+
 export function NetworkStatus() {
   const [status, setStatus] = useState<Status>("checking");
   const [uptime, setUptime] = useState<number | null>(null);
@@ -25,7 +21,7 @@ export function NetworkStatus() {
         const json = await res.json();
         if (cancelled) return;
         setStatus("online");
-        // tRPC wraps the result in { result: { data: { ... } } }
+
         const data = json?.result?.data ?? json?.data ?? json;
         setUptime(data?.uptime ?? null);
       } catch {

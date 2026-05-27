@@ -100,10 +100,23 @@ app.use("/docs", async (req, res, next) => {
 });
 
 const createContext = async ({ req }: CreateExpressContextOptions) => {
+  // 1. Fast-path: bypass Clerk auth and DB for health checks to optimize status checks
+  if (req.path.includes("health.check") || req.path.includes("/health")) {
+    return createBaseContext({
+      userId: null,
+      dbUser: null,
+      requestId: req.requestId,
+      ipAddress: (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
+        ?? req.ip
+        ?? "unknown",
+    });
+  }
+
   const auth = getAuth(req);
+  let dbUser = null;
 
   if (auth.userId) {
-    const existingUser = await userService.getUserByClerkId(auth.userId);
+    let existingUser = await userService.getUserByClerkId(auth.userId);
 
     if (!existingUser) {
       const clerkUser = await clerkClient.users.getUser(auth.userId);
@@ -112,7 +125,7 @@ const createContext = async ({ req }: CreateExpressContextOptions) => {
         ?? clerkUser.emailAddresses[0];
 
       if (primaryEmail) {
-        await userService.upsertUser({
+        existingUser = await userService.upsertUser({
           clerkId: auth.userId,
           fullName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || null,
           email: primaryEmail.emailAddress,
@@ -120,10 +133,12 @@ const createContext = async ({ req }: CreateExpressContextOptions) => {
         });
       }
     }
+    dbUser = existingUser;
   }
 
   return createBaseContext({
     userId: auth.userId ?? null,
+    dbUser,
     requestId: req.requestId,
     ipAddress: (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
       ?? req.ip

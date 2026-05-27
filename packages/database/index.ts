@@ -8,11 +8,7 @@ type DB = NodePgDatabase<typeof schema>;
 
 let _db: DB | undefined;
 
-/**
- * Lazily create the Drizzle client. Deferred so that importing this
- * module during a Next.js build (static analysis phase) doesn't crash
- * when DATABASE_URL isn't set yet.
- */
+
 function getDb(): DB {
   if (!_db) {
     _db = drizzle(env.DATABASE_URL, { schema });
@@ -20,11 +16,7 @@ function getDb(): DB {
   return _db;
 }
 
-/**
- * The Drizzle database client.
- * Uses a Proxy so it looks like a normal export (`db.select()...`)
- * while actually being lazily initialised.
- */
+
 export const db: DB = new Proxy({} as DB, {
   get(_target, prop) {
     const real = getDb();

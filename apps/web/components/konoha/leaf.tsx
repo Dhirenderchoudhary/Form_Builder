@@ -5,10 +5,7 @@ interface KonohaLeafProps {
   glow?: boolean;
 }
 
-/**
- * Konoha (Hidden Leaf) Village symbol — stylized SVG.
- * Used as logo, header mark, watermark, and success seal.
- */
+
 export function KonohaLeaf({
   size = 40,
   color = "#FF6B00",
@@ -32,14 +29,14 @@ export function KonohaLeaf({
       </defs>
       <circle cx="50" cy="50" r="48" fill={`url(#leaf-grad-${color.replace("#", "")})`} />
       <circle cx="50" cy="50" r="46" fill="none" stroke={color} strokeWidth="2.5" />
-      {/* Leaf body */}
+
       <path
         d="M50 18 Q 64 28, 64 44 Q 64 58, 50 60 Q 36 58, 36 44 Q 36 28, 50 18 Z"
         fill={color}
       />
-      {/* Stem */}
+
       <path d="M50 60 L 50 82" stroke={color} strokeWidth="4" strokeLinecap="round" />
-      {/* Curl detail */}
+
       <path
         d="M50 50 Q 60 56, 64 64"
         fill="none"
@@ -51,9 +48,7 @@ export function KonohaLeaf({
   );
 }
 
-/**
- * Four-pointed shuriken — used for accents and step markers.
- */
+
 export function Shuriken({
   size = 18,
   color = "currentColor",
@@ -80,9 +75,7 @@ export function Shuriken({
   );
 }
 
-/**
- * Kunai blade icon.
- */
+
 export function Kunai({
   size = 16,
   color = "currentColor",

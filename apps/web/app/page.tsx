@@ -150,15 +150,28 @@ export default async function HomePage() {
                   </Button>
                 </Link>
               ) : (
-                <SignUpButton mode="modal">
-                  <Button
-                    size="lg"
-                    className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
-                  >
-                    Begin training
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </SignUpButton>
+                <div className="flex flex-wrap items-center gap-3">
+                  <SignUpButton mode="modal">
+                    <Button
+                      size="lg"
+                      className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
+                    >
+                      Begin training
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </SignUpButton>
+
+                  <Link href="/api/demo-login">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="gap-2 border-konoha-orange text-konoha-orange font-heading uppercase tracking-[0.18em] hover:bg-konoha-orange/15"
+                    >
+                      Try Sandbox Demo
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
               )}
 
               <Link href="/naruto">
@@ -389,15 +402,28 @@ export default async function HomePage() {
                 </Button>
               </Link>
             ) : (
-              <SignUpButton mode="modal">
-                <Button
-                  size="lg"
-                  className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_40px_rgba(255,107,0,0.4)]"
-                >
-                  Enlist now
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </SignUpButton>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <SignUpButton mode="modal">
+                  <Button
+                    size="lg"
+                    className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_40px_rgba(255,107,0,0.4)]"
+                  >
+                    Enlist now
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </SignUpButton>
+
+                <Link href="/api/demo-login">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="gap-2 border-konoha-orange text-konoha-orange font-heading uppercase tracking-[0.18em] hover:bg-konoha-orange/15"
+                  >
+                    Enter Sandbox
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

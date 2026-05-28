@@ -1,6 +1,12 @@
 # 🦊 Konoha Form Scrolls
 
-![Konoha Form Scrolls Banner](https://images.unsplash.com/photo-1542435503-956c26b96560?auto=format&fit=crop&q=80&w=2000&h=600)
+<p align="center">
+  <img 
+    src="https://github.com/user-attachments/assets/1f8fa4e7-d341-4ce0-ac9e-6546914a62a3"
+    alt="Konoha Form Scrolls Banner"
+    width="700"
+  />
+</p>
 
 > A production-grade, dynamic form builder SaaS built with the T3 Stack (Turborepo, Next.js, tRPC, Drizzle) and styled with modern web aesthetics inspired by the Hidden Leaf Village.
 
@@ -21,7 +27,6 @@
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
-- [Hackathon Requirements Checklist](#-hackathon-requirements-checklist)
 - [Local Setup](#-local-setup)
 - [API Documentation](#-api-documentation)
 

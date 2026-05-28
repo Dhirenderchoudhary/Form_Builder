@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Providers } from "@/providers";
 import { KonohaAtmosphere } from "@/components/konoha/atmosphere";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 import { Cinzel, Noto_Sans_JP } from "next/font/google";
@@ -48,6 +49,7 @@ export default function RootLayout({
         <body className="antialiased">
           <KonohaAtmosphere />
           <Providers>{children}</Providers>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

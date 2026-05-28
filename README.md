@@ -72,21 +72,7 @@ The repository is structured as a Turborepo monorepo with separated boundaries:
 │   └── typescript-config/ # Shared tsconfig
 ```
 
----
 
-## 🎯 Hackathon Requirements Checklist
-
-✅ **Core:** User auth, Form Builder, Dynamic Fields, Public/Unlisted modes.
-✅ **Public Viewing:** Public forms are displayed in the Explore grid without requiring login to answer.
-✅ **Analytics:** Response dashboards, KPIs, and tabular views.
-✅ **Emails:** Creator notification and Respondent confirmation flows via Resend.
-✅ **SaaS Shell:** Landing page, Pricing Page, custom branding.
-✅ **Monorepo:** Built on the required Turborepo starter structure.
-✅ **API Docs:** Swagger/OpenAPI spec rendered beautifully using Scalar (`/api/docs`).
-✅ **Validation & Safety:** Rate limiting on submissions, Zod input validation, type-safe boundaries.
-✅ **Bonus:** Conditional logic, form expiry, CSV export, custom themes, password protection.
-
----
 
 ## 💻 Local Setup
 

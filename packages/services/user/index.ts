@@ -1,6 +1,7 @@
 import { db, eq } from "@repo/database";
-import { usersTable } from "@repo/database/models/user";
+import { usersTable, apiKeysTable } from "@repo/database/models/user";
 import type { InsertUser, SelectUser } from "@repo/database/models/user";
+import { createHash } from "node:crypto";
 
 class UserService {
   async upsertUser(data: InsertUser): Promise<SelectUser> {
@@ -40,6 +41,25 @@ class UserService {
 
   async deleteUserByClerkId(clerkId: string): Promise<void> {
     await db.delete(usersTable).where(eq(usersTable.clerkId, clerkId));
+  }
+
+  async validateApiKey(apiKey: string): Promise<SelectUser | undefined> {
+    const keyHash = createHash("sha256").update(apiKey).digest("hex");
+    
+    const [keyRecord] = await db
+      .select()
+      .from(apiKeysTable)
+      .where(eq(apiKeysTable.keyHash, keyHash));
+      
+    if (!keyRecord) return undefined;
+    
+    // Update last used asynchronously
+    db.update(apiKeysTable)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(apiKeysTable.id, keyRecord.id))
+      .catch(() => void 0);
+      
+    return this.getUserById(keyRecord.userId);
   }
 }
 

@@ -96,7 +96,13 @@ export class ResponseService extends BaseService {
 
       if (!insertedResponse) this.internal("Failed to save response");
 
-      // 5. Insert answers
+      // 5. Increment denormalized response count
+      await tx
+        .update(formsTable)
+        .set({ responseCount: sql`${formsTable.responseCount} + 1` })
+        .where(eq(formsTable.id, formId));
+
+      // 6. Insert answers
       if (answers.length > 0) {
         const answerRows: InsertResponseAnswer[] = answers.map((a) => ({
           responseId: insertedResponse.id,

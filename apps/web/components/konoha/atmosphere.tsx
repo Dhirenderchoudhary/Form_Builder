@@ -163,7 +163,7 @@ export function KonohaAtmosphere() {
     };
     
     // Delay initialization so it doesn't block LCP
-    let initTimeout = setTimeout(() => {
+    const initTimeout = setTimeout(() => {
       raf = requestAnimationFrame(tick);
     }, 500);
 

@@ -64,6 +64,8 @@ export const formsTable = pgTable(
     successMessage: text("success_message").default("Thank you for your response!"),
     redirectUrl: text("redirect_url"),
 
+    responseCount: integer("response_count").notNull().default(0),
+
     publishedAt: timestamp("published_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),

@@ -1,6 +1,9 @@
 import { z } from "zod";
-import { createHash } from "node:crypto";
+import * as bcrypt from "bcrypt";
 import { TRPCError } from "@trpc/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { Client as QStashClient } from "@upstash/qstash";
 import { router, publicProcedure } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import { formService, responseService, analyticsService, userService } from "../../services";
@@ -10,27 +13,24 @@ import { getEmailService } from "../../services/email";
 const TAGS = ["Public"];
 const getPath = generatePath("/public");
 
-// Simple memory-based rate limiting for Serverless Edge environments
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-// Cleanup expired rate limit entries every 5 minutes to prevent memory leaks
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, record] of rateLimitMap.entries()) {
-      if (record.resetTime < now) {
-        rateLimitMap.delete(key);
-      }
-    }
-  }, 5 * 60 * 1000).unref();
+// Initialize Upstash Redis & RateLimiter
+let ratelimit: Ratelimit | null = null;
+if (process.env["UPSTASH_REDIS_REST_URL"] && process.env["UPSTASH_REDIS_REST_TOKEN"]) {
+  const redis = new Redis({
+    url: process.env["UPSTASH_REDIS_REST_URL"],
+    token: process.env["UPSTASH_REDIS_REST_TOKEN"],
+  });
+  ratelimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "1 m"),
+    analytics: true,
+  });
 }
 
-/**
- * SHA-256 hex digest. Cheap, deterministic, doesn't require bcrypt.
- * Forms are not bank vaults — this is a soft access gate.
- */
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex");
+// Initialize QStash Client
+let qstashClient: QStashClient | null = null;
+if (process.env["QSTASH_TOKEN"]) {
+  qstashClient = new QStashClient({ token: process.env["QSTASH_TOKEN"] });
 }
 
 export const publicRouter = router({
@@ -67,8 +67,11 @@ export const publicRouter = router({
 
       const passwordHash = form.settings?.passwordHash;
       if (passwordHash) {
-        const provided = input.password ? hashPassword(input.password) : null;
-        if (provided !== passwordHash) {
+        let isMatch = false;
+        if (input.password) {
+          isMatch = await bcrypt.compare(input.password, passwordHash);
+        }
+        if (!isMatch) {
           // Return a slim "locked" payload — no fields, no description.
           return {
             id: form.id,
@@ -97,7 +100,8 @@ export const publicRouter = router({
       const form = await formService.getPublicFormBySlug(input.slug);
       const passwordHash = form.settings?.passwordHash;
       if (!passwordHash) return { ok: true };
-      return { ok: hashPassword(input.password) === passwordHash };
+      const isMatch = await bcrypt.compare(input.password, passwordHash);
+      return { ok: isMatch };
     }),
 
   submit: publicProcedure
@@ -114,18 +118,15 @@ export const publicRouter = router({
     .mutation(async ({ ctx, input }) => {
       const ip = ctx.ipAddress ?? "unknown_ip";
       
-      // Basic spam protection (5 submissions per minute per IP)
-      const now = Date.now();
-      const record = rateLimitMap.get(ip);
-      if (!record || record.resetTime < now) {
-        rateLimitMap.set(ip, { count: 1, resetTime: now + 60000 });
-      } else if (record.count > 5) {
-        throw new TRPCError({
-          code: "TOO_MANY_REQUESTS",
-          message: "Too many submissions. Please wait a moment.",
-        });
-      } else {
-        record.count++;
+      // Robust sliding-window rate limiting via Redis
+      if (ratelimit) {
+        const { success } = await ratelimit.limit(ip);
+        if (!success) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "Too many submissions. Please wait a moment.",
+          });
+        }
       }
 
       let form: Awaited<ReturnType<typeof formService.getPublicFormBySlug>>;
@@ -142,8 +143,11 @@ export const publicRouter = router({
       // Re-verify password on submit so the seal can't be bypassed.
       const passwordHash = form.settings?.passwordHash;
       if (passwordHash) {
-        const provided = input.password ? hashPassword(input.password) : null;
-        if (provided !== passwordHash) {
+        let isMatch = false;
+        if (input.password) {
+          isMatch = await bcrypt.compare(input.password, passwordHash);
+        }
+        if (!isMatch) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Insufficient chakra — wrong password.",
@@ -179,37 +183,82 @@ export const publicRouter = router({
           ipAddress: ip,
           referrer: input.metadata?.referer,
         })
-        .catch(() => void 0);
+        .catch((err) => console.error("Failed to track submit event:", err));
 
-      const emailService = getEmailService();
       const webUrl = process.env["WEB_URL"] ?? "http://localhost:3000";
+      const apiUrl = process.env["BASE_URL"] ?? "http://localhost:3001";
 
-      userService
-        .getUserById(form.userId)
-        .then(async (creator) => {
-          if (!creator) return;
-          return emailService.sendNewResponseNotification({
-            creatorEmail: creator.email,
-            creatorName: creator.fullName,
-            formTitle: form.title,
-            formSlug: input.slug,
-            responseId: response.id,
-            respondentEmail: input.respondentEmail,
-            submittedAt: response.submittedAt,
-            dashboardUrl: webUrl,
-          });
-        })
-        .catch(() => void 0);
-
-      if (input.respondentEmail) {
-        emailService
-          .sendRespondentConfirmation({
-            respondentEmail: input.respondentEmail,
-            formTitle: form.title,
-            successMessage: form.successMessage ?? "Thank you for your response!",
-            appName: process.env["APP_NAME"] ?? "Konoha Forms",
+      if (qstashClient) {
+        userService
+          .getUserById(form.userId)
+          .then(async (creator) => {
+            if (!creator) return;
+            // Publish creator notification job to QStash
+            await qstashClient!.publishJSON({
+              url: `${apiUrl}/api/webhooks/qstash/email`,
+              body: {
+                type: "new_response",
+                data: {
+                  creatorEmail: creator.email,
+                  creatorName: creator.fullName,
+                  formTitle: form.title,
+                  formSlug: input.slug,
+                  responseId: response.id,
+                  respondentEmail: input.respondentEmail,
+                  submittedAt: response.submittedAt,
+                  dashboardUrl: webUrl,
+                },
+              },
+              retries: 3,
+            });
           })
-          .catch(() => void 0);
+          .catch((err) => console.error("Failed to enqueue creator notification", err));
+
+        if (input.respondentEmail) {
+          qstashClient.publishJSON({
+            url: `${apiUrl}/api/webhooks/qstash/email`,
+            body: {
+              type: "respondent_confirmation",
+              data: {
+                respondentEmail: input.respondentEmail,
+                formTitle: form.title,
+                successMessage: form.successMessage ?? "Thank you for your response!",
+                appName: process.env["APP_NAME"] ?? "Konoha Forms",
+              },
+            },
+            retries: 3,
+          }).catch((err) => console.error("Failed to enqueue respondent confirmation", err));
+        }
+      } else {
+        // Fallback if no QStash is configured
+        const emailService = getEmailService();
+        userService
+          .getUserById(form.userId)
+          .then(async (creator) => {
+            if (!creator) return;
+            return emailService.sendNewResponseNotification({
+              creatorEmail: creator.email,
+              creatorName: creator.fullName,
+              formTitle: form.title,
+              formSlug: input.slug,
+              responseId: response.id,
+              respondentEmail: input.respondentEmail,
+              submittedAt: response.submittedAt,
+              dashboardUrl: webUrl,
+            });
+          })
+          .catch((err) => console.error("Email notification fallback failed", err));
+          
+        if (input.respondentEmail) {
+          emailService
+            .sendRespondentConfirmation({
+              respondentEmail: input.respondentEmail,
+              formTitle: form.title,
+              successMessage: form.successMessage ?? "Thank you for your response!",
+              appName: process.env["APP_NAME"] ?? "Konoha Forms",
+            })
+            .catch((err) => console.error("Email confirmation fallback failed", err));
+        }
       }
 
       return {

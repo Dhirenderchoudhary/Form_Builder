@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import ImageKit from "imagekit";
 import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
@@ -7,6 +8,7 @@ import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to
 
 import { serverRouter, createBaseContext } from "@repo/trpc/server";
 import { handleClerkWebhook } from "./webhooks/clerk.js";
+import { handleQStashWebhook } from "./webhooks/qstash.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import {
   helmetMiddleware,
@@ -55,6 +57,12 @@ app.post(
   handleClerkWebhook,
 );
 
+app.post(
+  "/api/webhooks/qstash/email",
+  express.raw({ type: "application/json" }),
+  handleQStashWebhook as any,
+);
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
@@ -85,19 +93,38 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.get("/openapi.json", (_req, res) => {
-  ApiResponse.ok(res, openApiDocument);
+let imagekit: ImageKit | null = null;
+if (process.env.IMAGEKIT_PUBLIC_KEY && process.env.IMAGEKIT_PRIVATE_KEY && process.env.IMAGEKIT_URL_ENDPOINT) {
+  imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+  });
+}
+
+app.get("/api/imagekit/auth", submissionRateLimit, (req, res) => {
+  if (!imagekit) {
+    return res.status(501).json({ error: "ImageKit is not configured" });
+  }
+  const authParams = imagekit.getAuthenticationParameters();
+  return res.json(authParams);
 });
 
-app.use("/docs", async (req, res, next) => {
-  const { apiReference } = await import("@scalar/express-api-reference");
-  return apiReference({
-    url: "/openapi.json",
-    theme: "purple",
-    layout: "modern",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  })(req as any, res, next);
-});
+if (env.NODE_ENV === "development") {
+  app.get("/openapi.json", (_req, res) => {
+    ApiResponse.ok(res, openApiDocument);
+  });
+
+  app.use("/docs", async (req, res, next) => {
+    const { apiReference } = await import("@scalar/express-api-reference");
+    return apiReference({
+      url: "/openapi.json",
+      theme: "purple",
+      layout: "modern",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    })(req as any, res, next);
+  });
+}
 
 const createContext = async ({ req }: CreateExpressContextOptions) => {
   // 1. Fast-path: bypass Clerk auth and DB for health checks to optimize status checks
@@ -113,6 +140,22 @@ const createContext = async ({ req }: CreateExpressContextOptions) => {
   const auth = getAuth(req);
   let dbUser = null;
 
+  // 2. API Key Authentication Fallback
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer kf_")) {
+    const apiKey = authHeader.replace("Bearer ", "");
+    dbUser = await userService.validateApiKey(apiKey) ?? null;
+    if (dbUser) {
+      return createBaseContext({
+        userId: dbUser.id,
+        dbUser,
+        requestId: req.requestId,
+        ipAddress: req.ip ?? "unknown",
+      });
+    }
+  }
+
+  // 3. Clerk Authentication
   if (auth.userId) {
     let existingUser = await userService.getUserByClerkId(auth.userId);
 

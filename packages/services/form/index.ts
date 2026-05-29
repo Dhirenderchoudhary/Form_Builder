@@ -41,15 +41,13 @@ export class FormService extends BaseService {
     const rows = await db
       .select({
         form: formsTable,
-        responseCount: count(formResponsesTable.id),
+        responseCount: formsTable.responseCount,
       })
       .from(formsTable)
-      .leftJoin(formResponsesTable, eq(formResponsesTable.formId, formsTable.id))
       .where(and(eq(formsTable.userId, userId), sql`${formsTable.status} != 'archived'`))
-      .groupBy(formsTable.id)
       .orderBy(desc(formsTable.updatedAt));
 
-    return rows.map((r) => ({ ...r.form, responseCount: Number(r.responseCount) }));
+    return rows.map((r) => ({ ...r.form, responseCount: r.responseCount }));
   }
 
   async getFormById(formId: string, requestingUserId: string): Promise<FormWithFields> {
@@ -159,9 +157,9 @@ export class FormService extends BaseService {
     const form = await this.findFormOrThrow(formId);
     this.assertOwner(form, userId);
 
-    const { createHash } = await import("node:crypto");
+    const bcrypt = await import("bcrypt");
     const passwordHash = password
-      ? createHash("sha256").update(password).digest("hex")
+      ? await bcrypt.hash(password, 10)
       : undefined;
 
     const nextSettings = { ...(form.settings ?? {}) };
@@ -266,7 +264,7 @@ export class FormService extends BaseService {
     const rows = await db
       .select({
         form: formsTable,
-        responseCount: count(formResponsesTable.id),
+        responseCount: formsTable.responseCount,
         owner: {
           id: usersTable.id,
           fullName: usersTable.fullName,
@@ -274,10 +272,8 @@ export class FormService extends BaseService {
         },
       })
       .from(formsTable)
-      .leftJoin(formResponsesTable, eq(formResponsesTable.formId, formsTable.id))
       .leftJoin(usersTable, eq(usersTable.id, formsTable.userId))
       .where(baseWhere)
-      .groupBy(formsTable.id, usersTable.id)
       .orderBy(desc(formsTable.publishedAt))
       .limit(limit)
       .offset(offset);
@@ -285,7 +281,7 @@ export class FormService extends BaseService {
     return {
       items: rows.map((r) => ({
         ...r.form,
-        responseCount: Number(r.responseCount),
+        responseCount: r.responseCount,
         owner: r.owner,
       })),
       total: Number(total),

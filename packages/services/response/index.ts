@@ -50,22 +50,65 @@ export class ResponseService extends BaseService {
 
     this.validateAnswers(fields, answers);
 
-    const [response] = await db
-      .insert(formResponsesTable)
-      .values({ formId, ...responseData })
-      .returning();
+    const response = await db.transaction(async (tx) => {
+      // 1. Lock the form to serialize concurrent submissions
+      const [form] = await tx
+        .select()
+        .from(formsTable)
+        .where(eq(formsTable.id, formId))
+        .for("update");
+        
+      if (!form) this.notFound("Form");
 
-    if (!response) this.internal("Failed to save response");
+      // 2. Safely check maxResponses within the locked transaction
+      if (form.maxResponses !== null) {
+        const countResult = await tx
+          .select({ total: count() })
+          .from(formResponsesTable)
+          .where(eq(formResponsesTable.formId, form.id));
+        const total = countResult[0]?.total ?? 0;
+        if (Number(total) >= form.maxResponses) {
+          throw { code: "FORM_FULL", message: "This form has reached its maximum number of responses." };
+        }
+      }
 
-    if (answers.length > 0) {
-      const answerRows: InsertResponseAnswer[] = answers.map((a) => ({
-        responseId: response.id,
-        fieldId: a.fieldId,
-        value: a.value,
-      }));
+      // 3. Safely check oneResponsePerIp within the locked transaction
+      if (form.settings?.oneResponsePerIp && responseData.ipAddress && responseData.ipAddress !== "unknown_ip") {
+        const [existing] = await tx
+          .select({ id: formResponsesTable.id })
+          .from(formResponsesTable)
+          .where(
+            and(
+              eq(formResponsesTable.formId, formId),
+              eq(formResponsesTable.ipAddress, responseData.ipAddress),
+            ),
+          );
+        if (existing) {
+          throw { code: "FORBIDDEN", message: "You have already submitted a response to this form." };
+        }
+      }
 
-      await db.insert(responseAnswersTable).values(answerRows);
-    }
+      // 4. Insert response
+      const [insertedResponse] = await tx
+        .insert(formResponsesTable)
+        .values({ formId, ...responseData })
+        .returning();
+
+      if (!insertedResponse) this.internal("Failed to save response");
+
+      // 5. Insert answers
+      if (answers.length > 0) {
+        const answerRows: InsertResponseAnswer[] = answers.map((a) => ({
+          responseId: insertedResponse.id,
+          fieldId: a.fieldId,
+          value: a.value,
+        }));
+
+        await tx.insert(responseAnswersTable).values(answerRows);
+      }
+
+      return insertedResponse;
+    });
 
     try {
       const { usersTable } = await import("@repo/database/models/user");

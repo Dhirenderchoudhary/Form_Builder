@@ -139,7 +139,8 @@ export const submitResponseSchema = z.object({
         value: answerValueSchema,
       }),
     )
-    .min(1),
+    .min(1)
+    .max(200),
 });
 
 export const trackEventSchema = z.object({

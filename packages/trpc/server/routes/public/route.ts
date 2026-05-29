@@ -13,6 +13,18 @@ const getPath = generatePath("/public");
 // Simple memory-based rate limiting for Serverless Edge environments
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
+// Cleanup expired rate limit entries every 5 minutes to prevent memory leaks
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitMap.entries()) {
+      if (record.resetTime < now) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000).unref();
+}
+
 /**
  * SHA-256 hex digest. Cheap, deterministic, doesn't require bcrypt.
  * Forms are not bank vaults — this is a soft access gate.
@@ -139,24 +151,26 @@ export const publicRouter = router({
         }
       }
 
-      if (form.settings?.oneResponsePerIp && ip !== "unknown_ip") {
-        const already = await responseService.hasIpAlreadySubmitted(form.id, ip);
-        if (already) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You have already submitted a response to this form.",
-          });
-        }
-      }
+      // `maxResponses` and `oneResponsePerIp` checks are now securely handled inside a 
+      // database transaction within `responseService.submitResponse` to prevent race conditions.
 
-      const response = await responseService.submitResponse({
-        formId: form.id,
-        respondentEmail: input.respondentEmail,
-        ipAddress: ip,
-        completionTimeMs: input.completionTimeMs,
-        metadata: input.metadata,
-        answers: input.answers,
-      });
+      let response;
+      try {
+        response = await responseService.submitResponse({
+          formId: form.id,
+          respondentEmail: input.respondentEmail,
+          ipAddress: ip,
+          completionTimeMs: input.completionTimeMs,
+          metadata: input.metadata,
+          answers: input.answers,
+        });
+      } catch (err: unknown) {
+        if (err && typeof err === "object" && "code" in err) {
+          const e = err as { code: string; message: string };
+          throw new TRPCError({ code: "FORBIDDEN", message: e.message });
+        }
+        throw err;
+      }
 
       analyticsService
         .trackEvent({

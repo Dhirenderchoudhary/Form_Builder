@@ -103,50 +103,52 @@ export class FormService extends BaseService {
 
     const newSlug = await this.generateUniqueSlug(`${form.title} (Copy)`);
 
-    const [newForm] = await db
-      .insert(formsTable)
-      .values({
-        userId,
-        title: `${form.title} (Copy)`,
-        description: form.description,
-        slug: newSlug,
-        status: "draft",
-        visibility: form.visibility,
-        themeId: form.themeId,
-        settings: form.settings,
-        maxResponses: form.maxResponses,
-        closesAt: form.closesAt,
-        collectEmail: form.collectEmail,
-        successMessage: form.successMessage,
-        redirectUrl: form.redirectUrl,
-      })
-      .returning();
+    return db.transaction(async (tx) => {
+      const [newForm] = await tx
+        .insert(formsTable)
+        .values({
+          userId,
+          title: `${form.title} (Copy)`,
+          description: form.description,
+          slug: newSlug,
+          status: "draft",
+          visibility: form.visibility,
+          themeId: form.themeId,
+          settings: form.settings,
+          maxResponses: form.maxResponses,
+          closesAt: form.closesAt,
+          collectEmail: form.collectEmail,
+          successMessage: form.successMessage,
+          redirectUrl: form.redirectUrl,
+        })
+        .returning();
 
-    if (!newForm) this.internal("Failed to clone form");
+      if (!newForm) this.internal("Failed to clone form");
 
-    // Clone all fields
-    if (fields.length > 0) {
-      const fieldInserts: InsertFormField[] = fields.map((field) => ({
-        formId: newForm.id,
-        type: field.type,
-        label: field.label,
-        placeholder: field.placeholder,
-        helpText: field.helpText,
-        order: field.order,
-        required: field.required,
-        validations: field.validations,
-        options: field.options,
-        minValue: field.minValue,
-        maxValue: field.maxValue,
-        minLabel: field.minLabel,
-        maxLabel: field.maxLabel,
-        conditionalLogic: field.conditionalLogic,
-      }));
+      // Clone all fields
+      if (fields.length > 0) {
+        const fieldInserts: InsertFormField[] = fields.map((field) => ({
+          formId: newForm.id,
+          type: field.type,
+          label: field.label,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          order: field.order,
+          required: field.required,
+          validations: field.validations,
+          options: field.options,
+          minValue: field.minValue,
+          maxValue: field.maxValue,
+          minLabel: field.minLabel,
+          maxLabel: field.maxLabel,
+          conditionalLogic: field.conditionalLogic,
+        }));
 
-      await db.insert(formFieldsTable).values(fieldInserts);
-    }
+        await tx.insert(formFieldsTable).values(fieldInserts);
+      }
 
-    return newForm;
+      return newForm;
+    });
   }
 
   async setFormPassword(
@@ -297,19 +299,21 @@ export class FormService extends BaseService {
   ): Promise<SelectFormField> {
     await this.assertOwnerByFormId(formId, userId);
 
-    const maxOrderResult = await db
-      .select({ maxOrder: sql<number>`COALESCE(MAX(${formFieldsTable.order}), -1)` })
-      .from(formFieldsTable)
-      .where(eq(formFieldsTable.formId, formId));
-    const maxOrder = maxOrderResult[0]?.maxOrder ?? -1;
+    return db.transaction(async (tx) => {
+      const maxOrderResult = await tx
+        .select({ maxOrder: sql<number>`COALESCE(MAX(${formFieldsTable.order}), -1)` })
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, formId));
+      const maxOrder = maxOrderResult[0]?.maxOrder ?? -1;
 
-    const [field] = await db
-      .insert(formFieldsTable)
-      .values({ ...data, formId, order: (maxOrder) + 1 })
-      .returning();
+      const [field] = await tx
+        .insert(formFieldsTable)
+        .values({ ...data, formId, order: maxOrder + 1 })
+        .returning();
 
-    if (!field) this.internal("Failed to add field");
-    return field;
+      if (!field) this.internal("Failed to add field");
+      return field;
+    });
   }
 
   async updateField(
@@ -333,9 +337,22 @@ export class FormService extends BaseService {
   async deleteField(fieldId: string, userId: string): Promise<void> {
     const field = await this.findFieldOrThrow(fieldId);
     await this.assertOwnerByFormId(field.formId, userId);
-    await db.delete(formFieldsTable).where(eq(formFieldsTable.id, fieldId));
+    
+    await db.transaction(async (tx) => {
+      await tx.delete(formFieldsTable).where(eq(formFieldsTable.id, fieldId));
 
-    await this.reorderFields(field.formId);
+      const fields = await tx
+        .select()
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, field.formId))
+        .orderBy(formFieldsTable.order);
+
+      await Promise.all(
+        fields.map((f, idx) =>
+          tx.update(formFieldsTable).set({ order: idx }).where(eq(formFieldsTable.id, f.id)),
+        ),
+      );
+    });
   }
 
   async reorderField(
@@ -346,25 +363,36 @@ export class FormService extends BaseService {
     const field = await this.findFieldOrThrow(fieldId);
     await this.assertOwnerByFormId(field.formId, userId);
 
-    const fields = await this.getFieldsSorted(field.formId);
-    const currentIdx = fields.findIndex((f) => f.id === fieldId);
-    if (currentIdx === -1) this.notFound("Field");
+    return db.transaction(async (tx) => {
+      const fields = await tx
+        .select()
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, field.formId))
+        .orderBy(formFieldsTable.order);
+        
+      const currentIdx = fields.findIndex((f) => f.id === fieldId);
+      if (currentIdx === -1) this.notFound("Field");
 
-    const reordered = [...fields];
-    const [moved] = reordered.splice(currentIdx, 1);
-    if (!moved) this.notFound("Field");
-    reordered.splice(newOrder, 0, moved);
+      const reordered = [...fields];
+      const [moved] = reordered.splice(currentIdx, 1);
+      if (!moved) this.notFound("Field");
+      reordered.splice(newOrder, 0, moved);
 
-    await Promise.all(
-      reordered.map((f, idx) =>
-        db
-          .update(formFieldsTable)
-          .set({ order: idx })
-          .where(eq(formFieldsTable.id, f.id)),
-      ),
-    );
+      await Promise.all(
+        reordered.map((f, idx) =>
+          tx
+            .update(formFieldsTable)
+            .set({ order: idx })
+            .where(eq(formFieldsTable.id, f.id)),
+        ),
+      );
 
-    return this.getFieldsSorted(field.formId);
+      return tx
+        .select()
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, field.formId))
+        .orderBy(formFieldsTable.order);
+    });
   }
 
   async findFormOrThrow(formId: string): Promise<SelectForm> {

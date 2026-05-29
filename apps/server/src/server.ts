@@ -106,9 +106,7 @@ const createContext = async ({ req }: CreateExpressContextOptions) => {
       userId: null,
       dbUser: null,
       requestId: req.requestId,
-      ipAddress: (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
-        ?? req.ip
-        ?? "unknown",
+      ipAddress: req.ip ?? "unknown",
     });
   }
 
@@ -140,9 +138,7 @@ const createContext = async ({ req }: CreateExpressContextOptions) => {
     userId: auth.userId ?? null,
     dbUser,
     requestId: req.requestId,
-    ipAddress: (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
-      ?? req.ip
-      ?? "unknown",
+    ipAddress: req.ip ?? "unknown",
   });
 };
 

@@ -18,6 +18,7 @@
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black" alt="Drizzle ORM" />
   <img src="https://img.shields.io/badge/Clerk-Auth-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" alt="Clerk Auth" />
+  <img src="https://img.shields.io/badge/Vitest-Test_Suite-729B1B?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest" />
   
   <p align="center">
     <strong>A production-grade, dynamic form builder SaaS built with the T3 Stack (Turborepo, Next.js, tRPC, Drizzle).</strong><br />
@@ -29,15 +30,16 @@
 
 ## 🚀 Live Demo & Links
 
+> [!NOTE]
+> **Demo Credentials (for Judges & Testing):**
+> - **Email:** `demo@konoha.com`
+> - **Password:** `Naruto@123`
+>
+> *(You can also click "Try Sandbox Demo" on the landing page to instantly log in without entering credentials!)*
+
 - **Deployed App**: [https://konoha-forma.dhirenderchoudhary.com/](https://konoha-forma.dhirenderchoudhary.com/)
 - **Frontend (Vercel)**: [https://form-builder-web-eight.vercel.app](https://form-builder-web-eight.vercel.app)
 - **Backend (Render)**: [https://form-builder-ampl.onrender.com](https://form-builder-ampl.onrender.com)
-
-**Demo Credentials (for Judges & Testing):**
-- **Email:** `demo@konoha.com`
-- **Password:** `Naruto@123`
-
-*(You can also sign up for a new account using the Clerk authentication flow).*
 
 ---
 
@@ -50,6 +52,7 @@
 - [Local Development Setup](#-local-development-setup)
 - [Environment Variables](#-environment-variables)
 - [API Documentation](#-api-documentation)
+- [Test Suite](#-test-suite)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -59,13 +62,13 @@
 
 Traditional form builders are boring and restrictive. Konoha Forma brings a completely unopinionated and beautiful approach to collecting data. Whether you need a simple contact form, an expansive multi-step survey with conditional logic, or a password-protected unlisted form, this SaaS delivers it with lightning-fast speeds courtesy of Next.js 15 and the T3 Stack.
 
-It serves as both a **powerful user tool** and a **developer showcase** demonstrating how to scale complex React applications using Turborepo, tRPC, and Drizzle ORM.
+It serves as both a **powerful user tool** and a **developer showcase** demonstrating how to scale complex React applications using Turborepo, tRPC, Drizzle ORM, and comprehensive Zod validation testing.
 
 ---
 
 ## ✨ Features
 
-- 📜 **Dynamic Form Builder:** Create and customize forms with a wide variety of field types: Text, Email, Rating, Select, Date, Checkbox, Radio, and more.
+- 📜 **Dynamic Form Builder:** Drag-and-drop forms with a wide variety of field types: Text, Email, Rating, Select, Date, Checkbox, Scale, Radio, and File Uploads.
 - 🧠 **Conditional Logic (Jutsu):** Show or hide fields dynamically based on user input to create customized, branching pathways.
 - 🔒 **Form Security & Expiry:** Add password protection to your forms or set a hard deadline (`closesAt`) and absolute response limits.
 - 🎨 **Custom Themes:** Apply beautiful aesthetics, colors, and branding using the Built-in Theme Picker.
@@ -80,8 +83,8 @@ It serves as both a **powerful user tool** and a **developer showcase** demonstr
 ## 🛠 Tech Stack
 
 ### Frontend & UI
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router, React Server Components)
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/) for buttery smooth animations
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, React Server Components)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/)
 - **State Management & Fetching:** [React Query](https://tanstack.com/query/latest/) (via tRPC)
 - **UI Primitives:** [Radix UI](https://www.radix-ui.com/) / [shadcn/ui](https://ui.shadcn.com/)
 
@@ -93,7 +96,7 @@ It serves as both a **powerful user tool** and a **developer showcase** demonstr
 - **Authentication:** [Clerk](https://clerk.com/)
 - **Email Service:** [Resend](https://resend.com/)
 - **Data Validation:** [Zod](https://zod.dev/)
-- **API Documentation:** [Scalar](https://scalar.com/) (`@scalar/nextjs-api-reference`)
+- **Testing:** [Vitest](https://vitest.dev/)
 
 ---
 
@@ -101,17 +104,24 @@ It serves as both a **powerful user tool** and a **developer showcase** demonstr
 
 The codebase is organized as a **Turborepo monorepo**, ensuring strict boundaries, fast builds, and shared configurations:
 
-```text
-├── apps/
-│   ├── web/               # Next.js 15 Frontend + API Routes
-│   └── server/            # Express backend (Optional/Alternative API Layer)
-├── packages/
-│   ├── database/          # Drizzle ORM models, schemas, and migrations
-│   ├── trpc/              # tRPC routers, server definitions, and procedures
-│   ├── services/          # Core business logic (forms, analytics, users, emails)
-│   ├── logger/            # Shared logging utility
-│   ├── eslint-config/     # Shared ESLint configuration
-│   └── typescript-config/ # Shared tsconfig
+```mermaid
+graph TD
+    A[apps/web (Next.js)] -->|Depends on| E[packages/trpc]
+    A -->|Depends on| F[packages/services]
+    A -->|Depends on| G[packages/ui]
+    
+    B[apps/server (Express)] -->|Depends on| E
+    B -->|Depends on| F
+    
+    E -->|Depends on| F
+    F -->|Depends on| H[packages/database]
+    
+    subgraph Packages
+        E[packages/trpc (API & Schemas)]
+        F[packages/services (Business Logic)]
+        G[packages/ui (React Components)]
+        H[packages/database (Drizzle ORM)]
+    end
 ```
 
 ---
@@ -143,6 +153,8 @@ cp apps/web/.env.example apps/web/.env
 Sync your PostgreSQL database schema using Drizzle:
 ```bash
 pnpm --filter @repo/database db:push
+# Or run migrations:
+pnpm --filter @repo/database db:migrate
 ```
 
 ### 5. Ignite the Server
@@ -168,6 +180,26 @@ To run this project locally, you must provide the following variables in `apps/w
 | `EMAIL_FROM` | Sender email address | E.g. `noreply@yourdomain.com` |
 | `NEXT_PUBLIC_API_URL` | Base URL for API requests | Default: `http://localhost:3000` |
 | `APP_NAME` | Name of your application | E.g. `KONOHA_FORMS` |
+
+---
+
+## 🧪 Test Suite
+
+Konoha Forms is rigorously tested using **Vitest**. The test suite focuses heavily on the structural integrity of the application, validating Zod schemas and core business logic utilities.
+
+Run all tests across the monorepo:
+```bash
+pnpm test
+```
+
+Run tests with coverage reports:
+```bash
+pnpm test:coverage
+```
+
+### Test Coverage Highlights
+- **Schema Validation:** Comprehensive unit tests for all 10+ Zod schemas (`createFormSchema`, `submitResponseSchema`, `conditionalLogicSchema`, etc.) guaranteeing robust API boundary defenses.
+- **Service Utilities:** Full edge-case coverage for slug generators and response data validation logic.
 
 ---
 

@@ -374,7 +374,7 @@ export function CloudPattern({ className, opacity = 0.04 }: { className?: string
       className={className}
       width="100%"
       height="100%"
-      style={{ opacity }}
+      style={{ opacity, willChange: "transform" }}
       aria-hidden="true"
     >
       <defs>

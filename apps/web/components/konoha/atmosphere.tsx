@@ -161,7 +161,11 @@ export function KonohaAtmosphere() {
 
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
+    
+    // Delay initialization so it doesn't block LCP
+    let initTimeout = setTimeout(() => {
+      raf = requestAnimationFrame(tick);
+    }, 500);
 
     const onResize = () => setSize();
     window.addEventListener("resize", onResize);
@@ -180,6 +184,7 @@ export function KonohaAtmosphere() {
 
     return () => {
       running = false;
+      clearTimeout(initTimeout);
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);

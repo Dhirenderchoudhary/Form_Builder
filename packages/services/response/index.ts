@@ -117,8 +117,8 @@ export class ResponseService extends BaseService {
     });
 
     try {
-      const { usersTable } = await import("@repo/database/models/user");
-      const { EmailService } = await import("../email");
+      const { usersTable } = await import("@repo/database/models/user.js");
+      const { EmailService } = await import("../email/index.js");
       
       const [formInfo] = await db
         .select({

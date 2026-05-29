@@ -8,7 +8,7 @@ import { router, publicProcedure } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import { formService, responseService, analyticsService, userService } from "../../services";
 import { submitResponseSchema, trackEventSchema } from "../../schemas/form.schemas";
-import { getEmailService } from "../../services/email";
+import EmailService from "@repo/services/email";
 
 const TAGS = ["Public"];
 const getPath = generatePath("/public");
@@ -231,7 +231,11 @@ export const publicRouter = router({
         }
       } else {
         // Fallback if no QStash is configured
-        const emailService = getEmailService();
+        const emailService = new EmailService({
+          apiKey: process.env["RESEND_API_KEY"],
+          fromAddress: process.env["EMAIL_FROM"] ?? "noreply@konohaforms.app",
+          appName: process.env["APP_NAME"] ?? "Konoha Forms",
+        });
         userService
           .getUserById(form.userId)
           .then(async (creator) => {

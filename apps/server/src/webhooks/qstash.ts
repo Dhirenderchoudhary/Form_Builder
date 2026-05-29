@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { verifySignatureEdge } from "@upstash/qstash/verify";
+import { Receiver } from "@upstash/qstash";
 import EmailService from "@repo/services/email";
 
 export async function handleQStashWebhook(req: Request, res: Response) {
@@ -14,12 +14,21 @@ export async function handleQStashWebhook(req: Request, res: Response) {
       ? rawBody.toString('utf8') 
       : typeof rawBody === "string" ? rawBody : JSON.stringify(rawBody);
 
-    const isValid = await verifySignatureEdge({
-      signature,
-      body: bodyText,
-      url: `${process.env["BASE_URL"]}/api/webhooks/qstash/email`,
-      clockTolerance: 300,
-    }, process.env["QSTASH_CURRENT_SIGNING_KEY"], process.env["QSTASH_NEXT_SIGNING_KEY"]);
+    const receiver = new Receiver({
+      currentSigningKey: process.env["QSTASH_CURRENT_SIGNING_KEY"]!,
+      nextSigningKey: process.env["QSTASH_NEXT_SIGNING_KEY"]!,
+    });
+
+    let isValid = true;
+    try {
+      await receiver.verify({
+        signature,
+        body: bodyText,
+        url: `${process.env["BASE_URL"]}/api/webhooks/qstash/email`,
+      });
+    } catch {
+      isValid = false;
+    }
 
     if (!isValid) {
       return res.status(401).json({ error: "Invalid signature" });

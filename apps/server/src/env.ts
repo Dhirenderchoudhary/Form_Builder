@@ -18,7 +18,10 @@ const envSchema = z.object({
 
 function createEnv(env: NodeJS.ProcessEnv) {
   const result = envSchema.safeParse(env);
-  if (!result.success) throw new Error(result.error.message);
+  if (!result.success) {
+    console.error("Environment validation failed:", result.error.flatten());
+    throw new Error(result.error.message);
+  }
   return result.data;
 }
 

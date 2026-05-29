@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";

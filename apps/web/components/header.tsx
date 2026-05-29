@@ -72,38 +72,36 @@ export function Header() {
         {/* Auth & Mobile Menu */}
         <div className="flex items-center justify-end gap-3">
           <div className="hidden min-w-[140px] items-center justify-end gap-3 sm:flex">
-            {isLoaded &&
-              (isSignedIn ? (
-                <>
-                  <Link href="/dashboard">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 text-xs uppercase tracking-[0.15em] hover:text-konoha-orange"
-                    >
-                      <LayoutDashboard className="h-3.5 w-3.5" />
-                      Hokage&apos;s Desk
-                    </Button>
-                  </Link>
-                  <UserButton appearance={{ elements: { avatarBox: "h-8 w-8 ring-2 ring-konoha-orange/40 hover:ring-konoha-orange" } }} />
-                </>
-              ) : (
-                <>
-                  <SignInButton mode="modal">
-                    <Button variant="ghost" size="sm" className="text-xs uppercase tracking-[0.15em]">
-                      Sign In
-                    </Button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <Button
-                      size="sm"
-                      className="btn-rasengan font-heading text-xs uppercase tracking-[0.15em]"
-                    >
-                      Enlist
-                    </Button>
-                  </SignUpButton>
-                </>
-              ))}
+          {isLoaded && (
+            isSignedIn ? (
+              <>
+                <Link href="/dashboard">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-xs uppercase tracking-[0.15em] hover:text-konoha-orange"
+                  >
+                    <LayoutDashboard className="h-3.5 w-3.5" />
+                    Hokage&apos;s Desk
+                  </Button>
+                </Link>
+                <UserButton appearance={{ elements: { avatarBox: "h-8 w-8 ring-2 ring-konoha-orange/40 hover:ring-konoha-orange" } }} />
+              </>
+            ) : (
+              <>
+                <SignInButton mode="modal">
+                  <Button variant="ghost" size="sm" className="text-xs uppercase tracking-[0.15em]">
+                    Sign In
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button size="sm" className="btn-rasengan font-heading text-xs uppercase tracking-[0.15em]">
+                    Enlist
+                  </Button>
+                </SignUpButton>
+              </>
+            )
+          )}
           </div>
 
           {/* Hamburger toggle for phones */}

@@ -18,7 +18,10 @@ export const env: Env = new Proxy({} as Env, {
         NODE_ENV: process.env.NODE_ENV,
       };
       const result = envSchema.safeParse(envData);
-      if (!result.success) throw new Error(result.error.message);
+      if (!result.success) {
+        console.error("Database env validation failed:", result.error.flatten());
+        throw new Error(result.error.message);
+      }
       _env = result.data;
     }
     return _env[prop as keyof Env];

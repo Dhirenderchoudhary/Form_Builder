@@ -157,7 +157,7 @@ export class FormService extends BaseService {
     const form = await this.findFormOrThrow(formId);
     this.assertOwner(form, userId);
 
-    const bcrypt = await import("bcrypt");
+    const bcrypt = await import("bcryptjs");
     const passwordHash = password
       ? await bcrypt.hash(password, 10)
       : undefined;

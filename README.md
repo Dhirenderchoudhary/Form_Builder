@@ -106,21 +106,21 @@ The codebase is organized as a **Turborepo monorepo**, ensuring strict boundarie
 
 ```mermaid
 graph TD
-    A[apps/web (Next.js)] -->|Depends on| E[packages/trpc]
-    A -->|Depends on| F[packages/services]
-    A -->|Depends on| G[packages/ui]
+    A["apps/web (Next.js)"] -->|Depends on| E["packages/trpc"]
+    A -->|Depends on| F["packages/services"]
+    A -->|Depends on| G["packages/ui"]
     
-    B[apps/server (Express)] -->|Depends on| E
+    B["apps/server (Express)"] -->|Depends on| E
     B -->|Depends on| F
     
     E -->|Depends on| F
-    F -->|Depends on| H[packages/database]
+    F -->|Depends on| H["packages/database"]
     
     subgraph Packages
-        E[packages/trpc (API & Schemas)]
-        F[packages/services (Business Logic)]
-        G[packages/ui (React Components)]
-        H[packages/database (Drizzle ORM)]
+        E["packages/trpc (API & Schemas)"]
+        F["packages/services (Business Logic)"]
+        G["packages/ui (React Components)"]
+        H["packages/database (Drizzle ORM)"]
     end
 ```
 

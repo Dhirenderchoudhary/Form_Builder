@@ -20,6 +20,10 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+  ),
   title: "Hidden Leaf Forms — Forge your jutsu",
   description:
     "Forms forged with the Will of Fire. Build, share, and analyse your missions in the Hidden Leaf Village.",

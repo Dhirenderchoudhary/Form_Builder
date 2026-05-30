@@ -185,6 +185,12 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
+            
+            {!isSignedIn && (
+              <p className="mt-2 text-[11px] uppercase tracking-[0.1em] text-konoha-gold">
+                Demo Credentials: demo@konohaforms.com / konoha123
+              </p>
+            )}
 
             <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
               {oaths.map((item) => (
@@ -424,6 +430,12 @@ export default async function HomePage() {
                   </Button>
                 </Link>
               </div>
+            )}
+            
+            {!isSignedIn && (
+              <p className="mt-4 text-[11px] uppercase tracking-[0.1em] text-konoha-gold block w-full">
+                Demo Credentials: demo@konohaforms.com / konoha123
+              </p>
             )}
           </div>
         </div>

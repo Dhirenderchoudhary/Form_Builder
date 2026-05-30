@@ -264,49 +264,22 @@ export class ResponseService extends BaseService {
     answers: Array<{ fieldId: string; value: AnswerValue }>,
   ): void {
     const answerMap = new Map(answers.map((a) => [a.fieldId, a.value]));
-
+    
+    // Build a payload object mapping fieldId -> value
+    const payload: Record<string, unknown> = {};
     for (const field of fields) {
-      const value = answerMap.get(field.id);
-      const isEmpty = value === null || value === undefined || value === "" ||
-        (Array.isArray(value) && value.length === 0);
+      payload[field.id] = answerMap.get(field.id);
+    }
 
-      if (field.required && isEmpty) {
-        this.badRequest(`Field "${field.label}" is required`);
-      }
+    const { buildResponseValidator } = require("./validation");
+    const schema = buildResponseValidator(fields);
 
-      if (!isEmpty && value !== null && value !== undefined) {
-        const v = field.validations;
-
-        if (typeof value === "string") {
-          if (v.minLength && value.length < v.minLength) {
-            this.badRequest(
-              `"${field.label}" must be at least ${v.minLength} characters`,
-            );
-          }
-          if (v.maxLength && value.length > v.maxLength) {
-            this.badRequest(
-              `"${field.label}" must be at most ${v.maxLength} characters`,
-            );
-          }
-          if (v.pattern) {
-            const regex = new RegExp(v.pattern);
-            if (!regex.test(value)) {
-              this.badRequest(
-                v.patternMessage ?? `"${field.label}" has an invalid format`,
-              );
-            }
-          }
-        }
-
-        if (typeof value === "number") {
-          if (v.min !== undefined && value < v.min) {
-            this.badRequest(`"${field.label}" must be at least ${v.min}`);
-          }
-          if (v.max !== undefined && value > v.max) {
-            this.badRequest(`"${field.label}" must be at most ${v.max}`);
-          }
-        }
-      }
+    const result = schema.safeParse(payload);
+    
+    if (!result.success) {
+      // Pick the first error to throw as a bad request
+      const firstError = result.error.errors[0];
+      this.badRequest(firstError?.message ?? "Invalid response data");
     }
   }
 }

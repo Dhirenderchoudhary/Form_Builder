@@ -4,6 +4,8 @@ import { authRouter } from "./routes/auth/route";
 import { formsRouter } from "./routes/forms/route";
 import { publicRouter } from "./routes/public/route";
 import { exploreRouter } from "./routes/explore/route";
+import { responsesRouter } from "./routes/responses/route";
+import { analyticsRouter } from "./routes/analytics/route";
 
 export const serverRouter = router({
   health: healthRouter,
@@ -11,6 +13,8 @@ export const serverRouter = router({
   forms: formsRouter,
   public: publicRouter,
   explore: exploreRouter,
+  responses: responsesRouter,
+  analytics: analyticsRouter,
 });
 
 export type ServerRouter = typeof serverRouter;

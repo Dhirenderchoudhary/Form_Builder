@@ -42,7 +42,7 @@ export default function FormAnalyticsPage({ params }: Props) {
     return { from: from.toISOString() };
   }, [range]);
 
-  const analyticsQuery = trpc.forms.analytics.useQuery({ formId, ...rangeFilter });
+  const analyticsQuery = trpc.analytics.get.useQuery({ formId, ...rangeFilter });
 
   if (formQuery.isLoading) {
     return (
@@ -273,8 +273,56 @@ export default function FormAnalyticsPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Field Distributions */}
+      <div className="mb-8">
+        <div className="mb-4">
+          <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-konoha-orange">
+            Field Distributions
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Choice breakdowns for select, radio, and checkbox fields
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <FieldAnalytics formId={formId} />
+        </div>
+      </div>
+
       {/* Responses table */}
       <ResponsesTable formId={formId} fields={form.fields ?? []} />
     </div>
+  );
+}
+
+function FieldAnalytics({ formId }: { formId: string }) {
+  const query = trpc.analytics.getFieldAnalytics.useQuery({ formId });
+
+  if (query.isLoading) {
+    return Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="h-48 animate-pulse rounded bg-konoha-forest/20" />
+    ));
+  }
+
+  if (!query.data || query.data.length === 0) {
+    return <div className="col-span-full text-sm text-muted-foreground">No choice-based fields to analyze.</div>;
+  }
+
+  return (
+    <>
+      {query.data.map((field: any, i: number) => (
+        <div key={i} className="scroll-card p-5">
+          <p className="mb-4 text-[12px] font-semibold text-foreground truncate" title={field.label}>
+            {field.label}
+          </p>
+          <BarList
+            items={field.data.map((d: any) => ({
+              label: d.choice,
+              count: d.count,
+            }))}
+            emptyLabel="No responses yet"
+          />
+        </div>
+      ))}
+    </>
   );
 }

@@ -77,7 +77,7 @@ export function ResponseDrawer({
   const toast = useToast();
   const utils = trpc.useUtils();
 
-  const { data, isLoading } = trpc.forms.getResponse.useQuery(
+  const { data, isLoading } = trpc.responses.get.useQuery(
     { formId, responseId: responseId ?? "" },
     { enabled: !!responseId },
   );
@@ -93,10 +93,10 @@ export function ResponseDrawer({
       }
     | undefined;
 
-  const deleteResponse = trpc.forms.deleteResponse.useMutation({
+  const deleteResponse = trpc.responses.delete.useMutation({
     onSuccess: async () => {
-      await utils.forms.listResponses.invalidate({ formId });
-      await utils.forms.analytics.invalidate({ formId });
+      await utils.responses.list.invalidate({ formId });
+      await utils.analytics.get.invalidate({ formId });
       toast.push({
         variant: "success",
         title: "Response purged",
@@ -104,7 +104,7 @@ export function ResponseDrawer({
       });
       onClose();
     },
-    onError: (err) =>
+    onError: (err: any) =>
       toast.push({
         variant: "error",
         title: "Could not delete",

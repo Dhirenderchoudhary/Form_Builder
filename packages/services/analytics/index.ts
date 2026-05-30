@@ -142,6 +142,72 @@ export class AnalyticsService extends BaseService {
       })),
     };
   }
+
+  async getFieldAnalytics(formId: string) {
+    const { formFieldsTable } = require("@repo/database/models/form");
+    const { responseAnswersTable, formResponsesTable } = require("@repo/database/models/response");
+
+    // Fetch all choice-based fields for this form
+    const fields = await db
+      .select({ id: formFieldsTable.id, label: formFieldsTable.label, type: formFieldsTable.type })
+      .from(formFieldsTable)
+      .where(
+        and(
+          eq(formFieldsTable.formId, formId),
+          sql`${formFieldsTable.type} IN ('select', 'radio', 'checkbox')`
+        )
+      );
+
+    if (fields.length === 0) return [];
+
+    const fieldIds = fields.map((f) => f.id);
+
+    // Fetch all answers for these fields
+    const answers = await db
+      .select({
+        fieldId: responseAnswersTable.fieldId,
+        value: responseAnswersTable.value,
+      })
+      .from(responseAnswersTable)
+      .innerJoin(formResponsesTable, eq(responseAnswersTable.responseId, formResponsesTable.id))
+      .where(
+        and(
+          eq(formResponsesTable.formId, formId),
+          sql`${responseAnswersTable.fieldId} = ANY(ARRAY[${sql.join(
+            fieldIds.map((id) => sql`${id}::uuid`),
+            sql`, `
+          )}])`
+        )
+      );
+
+    // Aggregate answers
+    const distribution: Record<string, { label: string; type: string; choices: Record<string, number> }> = {};
+    for (const field of fields) {
+      distribution[field.id] = { label: field.label, type: field.type, choices: {} };
+    }
+
+    for (const answer of answers) {
+      const fieldData = distribution[answer.fieldId];
+      if (!fieldData || !answer.value) continue;
+
+      if (Array.isArray(answer.value)) {
+        for (const v of answer.value) {
+          const valStr = String(v);
+          fieldData.choices[valStr] = (fieldData.choices[valStr] || 0) + 1;
+        }
+      } else {
+        const valStr = String(answer.value);
+        fieldData.choices[valStr] = (fieldData.choices[valStr] || 0) + 1;
+      }
+    }
+
+    // Convert into a friendly array format for charting
+    return Object.values(distribution).map((d) => ({
+      label: d.label,
+      type: d.type,
+      data: Object.entries(d.choices).map(([choice, count]) => ({ choice, count })).sort((a, b) => b.count - a.count),
+    }));
+  }
 }
 
 export default AnalyticsService;

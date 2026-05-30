@@ -61,7 +61,7 @@ export function CsvExport({ formId, formTitle, formSlug, fields }: Props) {
 
   async function fetchAll(): Promise<ResponseRow[]> {
     // Fetch the first page to discover the total count
-    const first = (await utils.forms.listResponses.fetch({
+    const first = (await utils.responses.list.fetch({
       formId,
       page: 1,
       pageSize: PAGE_SIZE,
@@ -80,14 +80,14 @@ export function CsvExport({ formId, formTitle, formSlug, fields }: Props) {
     const pageNumbers = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
     const rest = await Promise.all(
       pageNumbers.map((page) =>
-        utils.forms.listResponses.fetch({ formId, page, pageSize: PAGE_SIZE }),
+        utils.responses.list.fetch({ formId, page, pageSize: PAGE_SIZE }),
       ),
     );
 
     return [
       ...first.items,
       ...rest.flatMap(
-        (r) =>
+        (r: any) =>
           ((r as { items: ResponseRow[] } | undefined)?.items ?? []),
       ),
     ];

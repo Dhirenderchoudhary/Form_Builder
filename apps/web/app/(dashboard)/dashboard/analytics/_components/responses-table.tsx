@@ -63,7 +63,7 @@ export function ResponsesTable({ formId, fields }: Props) {
 
   const hasFilters = emailFilter || dateFrom || dateTo;
 
-  const { data, isLoading } = trpc.forms.listResponses.useQuery({
+  const { data, isLoading } = trpc.responses.list.useQuery({
     formId,
     page,
     pageSize,

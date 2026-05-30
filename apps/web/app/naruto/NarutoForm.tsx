@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Rasengan } from "../../components/konoha/illustrations";
 import styles from "./naruto.module.css";
 
 // ============================================================================
@@ -756,8 +757,7 @@ export default function NarutoForm() {
                 disabled={submitting || !data.oath}
                 aria-label="Submit Rasengan"
               >
-                <span className={styles.rasenganRing} aria-hidden />
-                <span className={styles.rasenganRing2} aria-hidden />
+                <img src="/rasengan.png" alt="Rasengan" className={`${styles.rasenganSvg} ${!submitting ? styles.spinning : ""}`} width="180" height="180" />
                 <span className={styles.rasenganLabel}>
                   {submitting ? "..." : "Rasengan"}
                 </span>

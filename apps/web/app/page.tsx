@@ -396,46 +396,46 @@ export default async function HomePage() {
           <p className="mt-3 text-sm uppercase tracking-[0.25em] text-muted-foreground">
             Forge your first scroll today
           </p>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex flex-col items-center justify-center w-full">
             {isSignedIn ? (
               <Link href="/dashboard">
                 <Button
                   size="lg"
-                  className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_40px_rgba(255,107,0,0.4)]"
+                  className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_40px_rgba(255,107,0,0.4)] hover:shadow-[0_0_60px_rgba(255,107,0,0.6)]"
                 >
                   Open Hokage&apos;s Desk
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             ) : (
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <SignUpButton mode="modal">
-                  <Button
-                    size="lg"
-                    className="btn-rasengan gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_40px_rgba(255,107,0,0.4)]"
-                  >
-                    Enlist now
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </SignUpButton>
+              <div className="flex flex-col items-center justify-center w-full gap-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+                  <SignUpButton mode="modal">
+                    <Button
+                      size="lg"
+                      className="btn-rasengan w-full sm:w-auto gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_40px_rgba(255,107,0,0.4)] hover:shadow-[0_0_60px_rgba(255,107,0,0.6)]"
+                    >
+                      Enlist now
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </SignUpButton>
 
-                <Link href="/api/demo-login">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="gap-2 border-konoha-orange text-konoha-orange font-heading uppercase tracking-[0.18em] hover:bg-konoha-orange/15"
-                  >
-                    Enter Sandbox
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                  <Link href="/api/demo-login" className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full sm:w-auto gap-2 border-konoha-orange text-konoha-orange font-heading uppercase tracking-[0.18em] hover:bg-konoha-orange/15"
+                    >
+                      Enter Sandbox
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+                
+                <p className="text-[11px] uppercase tracking-[0.1em] text-konoha-gold text-center opacity-80">
+                  Demo Credentials: demo@konohaforms.com / konoha123
+                </p>
               </div>
-            )}
-            
-            {!isSignedIn && (
-              <p className="mt-4 text-[11px] uppercase tracking-[0.1em] text-konoha-gold block w-full">
-                Demo Credentials: demo@konohaforms.com / konoha123
-              </p>
             )}
           </div>
         </div>

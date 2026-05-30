@@ -48,7 +48,7 @@ export default function DashboardHomePage() {
         {/* Itachi silhouette right side, very subtle */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-6 -top-4 hidden opacity-[0.18] md:block lg:-right-2 lg:opacity-[0.22]"
+          className="pointer-events-none absolute -right-6 -top-4 hidden md:block lg:-right-2"
         >
           <ItachiSilhouette size={300} />
         </div>

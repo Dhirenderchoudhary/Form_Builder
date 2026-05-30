@@ -184,7 +184,7 @@ export function Headband({ size = 200, ...rest }: IconProps) {
 /* ------------------------------------------------------------------
    Rasengan — spinning chakra sphere
    ------------------------------------------------------------------ */
-export function Rasengan({ size = 100, animated = true, ...rest }: IconProps & { animated?: boolean }) {
+export function Rasengan({ size = 100, animated = true, className = "", ...rest }: IconProps & { animated?: boolean }) {
   return (
     <svg
       width={size}
@@ -192,55 +192,92 @@ export function Rasengan({ size = 100, animated = true, ...rest }: IconProps & {
       viewBox="0 0 120 120"
       fill="none"
       aria-hidden="true"
+      className={`${animated ? "spinning-rasengan" : ""} ${className}`}
       {...rest}
     >
       <defs>
-        <radialGradient id="rg-core" cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="20%" stopColor="#CCEEFF" />
-          <stop offset="55%" stopColor="#00D4FF" />
-          <stop offset="100%" stopColor="#0066AA" />
+        {/* Soft Aura */}
+        <radialGradient id="rasengan-aura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="25%" stopColor="#ccffff" stopOpacity="0.8" />
+          <stop offset="55%" stopColor="#00d4ff" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#0066ff" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="rg-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#00D4FF" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#00D4FF" stopOpacity="0" />
+        
+        {/* Intense Core */}
+        <radialGradient id="rasengan-core" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="45%" stopColor="#ffffff" />
+          <stop offset="80%" stopColor="#e0ffff" />
+          <stop offset="100%" stopColor="#88ddff" stopOpacity="0" />
         </radialGradient>
+
+        <filter id="glow-blur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="core-blur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="8" />
+        </filter>
       </defs>
 
-      {/* Outer glow */}
-      <circle cx="60" cy="60" r="58" fill="url(#rg-glow)" />
+      {/* Massive soft aura */}
+      <circle cx="60" cy="60" r="50" fill="url(#rasengan-aura)" />
+      
+      {/* Heavy blurred core glow */}
+      <circle cx="60" cy="60" r="30" fill="#ffffff" filter="url(#core-blur)" />
+      <circle cx="60" cy="60" r="22" fill="url(#rasengan-core)" />
+      <circle cx="60" cy="60" r="14" fill="#ffffff" />
 
-      {/* Core sphere */}
-      <circle cx="60" cy="60" r="34" fill="url(#rg-core)" />
-
-      {/* Spiral chakra streams */}
-      <g style={animated ? { animation: "rasengan-spin 2s linear infinite", transformOrigin: "60px 60px" } : undefined}>
-        <path
-          d="M60 26 Q 88 32, 92 60 Q 88 88, 60 94 Q 32 88, 28 60 Q 32 32, 60 26"
-          stroke="#FFFFFF"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.7"
-          strokeDasharray="2 4"
-        />
-        <path
-          d="M60 32 Q 82 38, 84 60 Q 82 82, 60 86 Q 38 82, 36 60 Q 38 38, 60 32"
-          stroke="#CCEEFF"
-          strokeWidth="0.8"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.5"
-          strokeDasharray="3 3"
-        />
+      {/* 
+        Chaotic Chakra Swirls 
+        We use intricate, twisting paths instead of perfect ellipses 
+        so it looks like a turbulent ball of energy, not an atom.
+      */}
+      
+      <g style={animated ? { animation: "spin-fast 0.5s linear infinite", transformOrigin: "60px 60px" } : undefined}>
+        {/* Dense Inner Swirls */}
+        <path d="M 60 25 C 85 25, 90 45, 80 70 C 70 95, 45 85, 35 60 C 25 35, 45 25, 60 25" stroke="#ffffff" strokeWidth="1.5" fill="none" opacity="0.9" filter="url(#glow-blur)" />
+        <path d="M 30 50 C 40 20, 80 20, 90 50 C 100 80, 70 100, 40 90 C 10 80, 20 50, 30 50" stroke="#ccffff" strokeWidth="2" fill="none" opacity="0.6" filter="url(#glow-blur)" strokeDasharray="20 10 5 15" />
+        
+        {/* Jagged Energy */}
+        <path d="M 40 20 Q 60 40, 85 25 T 90 60 Q 70 50, 45 80 T 25 50 Z" stroke="#ffffff" strokeWidth="1" fill="none" opacity="0.7" />
+        <path d="M 45 35 Q 75 35, 80 65 T 45 85 Q 35 60, 45 35" stroke="#00ffff" strokeWidth="2.5" fill="none" opacity="0.4" filter="url(#glow-blur)" />
       </g>
 
-      {/* Highlight */}
-      <ellipse cx="50" cy="48" rx="10" ry="6" fill="#FFFFFF" opacity="0.5" />
+      <g style={animated ? { animation: "spin-reverse 0.7s linear infinite", transformOrigin: "60px 60px" } : undefined}>
+        {/* Mid-layer Swirls */}
+        <path d="M 60 15 C 100 20, 95 80, 60 95 C 25 110, 15 45, 60 15" stroke="#ffffff" strokeWidth="1.2" fill="none" opacity="0.8" strokeDasharray="15 25" strokeLinecap="round" />
+        <path d="M 25 70 C 15 40, 50 15, 85 35 C 120 55, 95 100, 60 90 C 25 80, 20 60, 25 70" stroke="#88ddff" strokeWidth="3" fill="none" opacity="0.5" filter="url(#glow-blur)" />
+        
+        <path d="M 35 45 Q 60 10, 85 40 T 70 85 Q 40 100, 25 70 T 35 45" stroke="#ffffff" strokeWidth="0.8" fill="none" opacity="0.9" />
+      </g>
+
+      <g style={animated ? { animation: "spin-fast 0.4s linear infinite", transformOrigin: "60px 60px" } : undefined}>
+        {/* Outer Wisps & Sparks */}
+        <path d="M 20 60 C 20 30, 60 18, 90 40" stroke="#ffffff" strokeWidth="1.5" fill="none" opacity="0.6" strokeDasharray="8 20" strokeLinecap="round" />
+        <path d="M 100 60 C 100 90, 60 105, 30 85" stroke="#00d4ff" strokeWidth="2" fill="none" opacity="0.7" strokeDasharray="15 30" strokeLinecap="round" filter="url(#glow-blur)" />
+        
+        {/* Rapid Orbits */}
+        <ellipse cx="60" cy="60" rx="42" ry="38" stroke="#ffffff" strokeWidth="1" fill="none" opacity="0.5" strokeDasharray="5 45 15 25" transform="rotate(45 60 60)" />
+        <ellipse cx="60" cy="60" rx="40" ry="35" stroke="#ccffff" strokeWidth="2" fill="none" opacity="0.3" strokeDasharray="30 60" transform="rotate(-20 60 60)" filter="url(#glow-blur)" />
+      </g>
+      
+      {/* High-speed particles orbiting the core */}
+      <g style={animated ? { animation: "spin-reverse 0.9s linear infinite", transformOrigin: "60px 60px" } : undefined}>
+        <circle cx="28" cy="45" r="2" fill="#ffffff" />
+        <circle cx="85" cy="75" r="3" fill="#ffffff" filter="url(#glow-blur)" />
+        <circle cx="65" cy="20" r="1.5" fill="#ccffff" />
+        <circle cx="35" cy="90" r="2.5" fill="#00d4ff" opacity="0.8" />
+        <circle cx="95" cy="40" r="1.5" fill="#ffffff" />
+      </g>
 
       <style>{`
-        @keyframes rasengan-spin {
+        @keyframes spin-fast {
           to { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+          to { transform: rotate(-360deg); }
         }
       `}</style>
     </svg>

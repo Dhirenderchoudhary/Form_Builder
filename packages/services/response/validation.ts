@@ -11,18 +11,18 @@ export function buildResponseValidator(fields: SelectFormField[]) {
 
     if (field.type === "number") {
       let numSchema = z.number({
-        invalid_type_error: `"${field.label}" must be a number`,
+        message: `"${field.label}" must be a number`,
       });
       if (v?.min !== undefined) numSchema = numSchema.min(v.min, `"${field.label}" must be at least ${v.min}`);
       if (v?.max !== undefined) numSchema = numSchema.max(v.max, `"${field.label}" must be at most ${v.max}`);
       fieldSchema = numSchema;
     } else if (field.type === "checkbox") {
       fieldSchema = z.array(z.string(), {
-        invalid_type_error: `"${field.label}" must be a list of choices`,
+        message: `"${field.label}" must be a list of choices`,
       });
     } else {
       let strSchema = z.string({
-        invalid_type_error: `"${field.label}" must be a string`,
+        message: `"${field.label}" must be a string`,
       });
       if (v?.minLength !== undefined) strSchema = strSchema.min(v.minLength, `"${field.label}" must be at least ${v.minLength} characters`);
       if (v?.maxLength !== undefined) strSchema = strSchema.max(v.maxLength, `"${field.label}" must be at most ${v.maxLength} characters`);

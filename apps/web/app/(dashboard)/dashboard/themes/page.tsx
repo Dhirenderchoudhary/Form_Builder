@@ -46,7 +46,7 @@ export default function ThemeGalleryPage() {
       <section className="relative mb-10 overflow-hidden rounded-lg border border-konoha-forest/40 bg-gradient-to-br from-konoha-ink/80 via-konoha-ink/60 to-transparent p-6 md:p-10">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-6 -top-4 hidden opacity-[0.15] md:block lg:-right-2 lg:opacity-[0.2]"
+          className="pointer-events-none absolute -right-6 -top-4 hidden md:block lg:-right-2"
         >
           <NarutoSilhouette size={300} />
         </div>

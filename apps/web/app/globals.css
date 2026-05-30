@@ -258,3 +258,11 @@
 .btn-rasengan:hover::before {
   left: 130%;
 }
+
+.spinning-rasengan {
+  animation: spin-rasengan 1.5s linear infinite;
+}
+@keyframes spin-rasengan {
+  to { transform: rotate(360deg); }
+}
+

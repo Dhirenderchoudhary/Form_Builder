@@ -23,6 +23,8 @@ import {
   Scroll,
   SageMarks,
 } from "@/components/konoha/illustrations";
+import { CreatorCredits } from "@/components/creator-credits";
+
 import { NetworkStatus } from "@/components/konoha/network-status";
 
 const oaths = [
@@ -452,7 +454,11 @@ export default async function HomePage() {
               KONOHA · FORM SCROLLS
             </span>
           </div>
-          <p>© {new Date().getFullYear()} Hidden Leaf Division</p>
+          <div className="flex flex-col items-center gap-2 md:flex-row md:gap-3">
+            <p>© {new Date().getFullYear()} Hidden Leaf Division</p>
+            <span className="hidden md:inline text-konoha-forest/60">|</span>
+            <CreatorCredits />
+          </div>
           <nav className="flex gap-5">
             <a href="#" className="hover:text-konoha-orange">Privacy</a>
             <a href="#" className="hover:text-konoha-orange">Terms</a>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { use } from "react";
-import { FormView } from "./_components/form-view";
-import { ClientOnly } from "./_components/client-only";
+import { FormViewDynamic } from "./_components/form-view-dynamic";
 import { db, formsTable, eq } from "@repo/database";
 
 interface Props {
@@ -41,9 +40,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function PublicFormPage({ params }: Props) {
   const { slug } = use(params);
-  return (
-    <ClientOnly>
-      <FormView slug={slug} />
-    </ClientOnly>
-  );
+  return <FormViewDynamic slug={slug} />;
 }

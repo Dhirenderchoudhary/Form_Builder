@@ -14,4 +14,5 @@ const nextConfig = {
   serverExternalPackages: ["pg", "drizzle-orm", "resend"],
 };
 
+// Config updated to trigger a server restart and clear the Turbopack module cache!
 export default nextConfig;

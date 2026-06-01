@@ -17,7 +17,7 @@ interface FormRow {
 
 export default function DashboardHomePage() {
   const { data: me } = trpc.auth.getMe.useQuery();
-  const { data: forms, isLoading } = trpc.forms.list.useQuery();
+  const { data: forms, isLoading, isError } = trpc.forms.list.useQuery();
 
   const formsArr = (forms ?? []) as FormRow[];
   const total = formsArr.length;
@@ -58,8 +58,8 @@ export default function DashboardHomePage() {
             {greeting}
           </p>
           <h1 className="font-heading text-3xl font-black leading-tight md:text-5xl">
-            Hokage&apos;s Desk
-            <span className="block text-konoha-orange text-glow-orange">
+            {"Hokage's Desk "} <br/>
+            <span className="text-konoha-orange text-glow-orange">
               {firstName}.
             </span>
           </h1>
@@ -94,34 +94,34 @@ export default function DashboardHomePage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Total Scrolls"
-            value={total}
+            value={isError ? "-" : total}
             icon={ScrollText}
             hint="Active mission scrolls forged"
-            loading={isLoading}
+            loading={isLoading && !isError}
             accent="orange"
           />
           <StatCard
             label="Responses Collected"
-            value={totalResponses}
+            value={isError ? "-" : totalResponses}
             icon={Inbox}
             hint="Intel gathered from the field"
-            loading={isLoading}
+            loading={isLoading && !isError}
             accent="chakra"
           />
           <StatCard
             label="Live Scrolls"
-            value={published}
+            value={isError ? "-" : published}
             icon={Radio}
             hint={drafts > 0 ? `${drafts} still in draft` : "All deployed"}
-            loading={isLoading}
+            loading={isLoading && !isError}
             accent="gold"
           />
           <StatCard
             label="Deployment Rate"
-            value={`${livePercent}%`}
+            value={isError ? "-" : `${livePercent}%`}
             icon={TrendingUp}
             hint="Scrolls active in the field"
-            loading={isLoading}
+            loading={isLoading && !isError}
             accent="crimson"
           />
         </div>

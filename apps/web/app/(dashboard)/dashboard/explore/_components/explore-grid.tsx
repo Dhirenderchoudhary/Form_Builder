@@ -48,6 +48,16 @@ export function ExploreGrid() {
 
   const isFiltering = search.trim().length > 0;
 
+  // Add a fallback for when data fetch is completely broken / hung
+  if (isError) {
+    return (
+      <ExploreEmpty
+        message="Couldn't reach the Village Map"
+        hint={((error as any)?.message ?? "Unknown error").slice(0, 120)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Search bar + meta */}
@@ -85,7 +95,7 @@ export function ExploreGrid() {
       ) : isError ? (
         <ExploreEmpty
           message="Couldn't reach the Village Map"
-          hint={(error?.message ?? "Unknown error").slice(0, 120)}
+          hint={((error as any)?.message ?? "Unknown error").slice(0, 120)}
         />
       ) : items.length === 0 ? (
         isFiltering ? (
@@ -141,7 +151,7 @@ export function ExploreGrid() {
  * Variant used as a "Try one of these" suggestions block on the dashboard.
  */
 export function ExploreSuggestions({ limit = 3 }: { limit?: number }) {
-  const { data, isLoading } = trpc.explore.listForms.useQuery({
+  const { data, isLoading, isError } = trpc.explore.listForms.useQuery({
     page: 1,
     pageSize: limit,
   });
@@ -164,6 +174,15 @@ export function ExploreSuggestions({ limit = 3 }: { limit?: number }) {
       <div className="scroll-card flex items-center gap-3 p-5 text-sm text-muted-foreground">
         <ScrollText className="h-4 w-4" />
         No public scrolls yet — be the first to share one.
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="scroll-card flex items-center gap-3 p-5 text-sm text-konoha-akatsuki">
+        <ScrollText className="h-4 w-4" />
+        Could not load explore suggestions.
       </div>
     );
   }

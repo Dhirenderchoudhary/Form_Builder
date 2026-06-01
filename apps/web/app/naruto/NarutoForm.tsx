@@ -727,6 +727,7 @@ export default function NarutoForm() {
                 className={`${styles.btn} ${styles.btnSecondary}`}
                 onClick={prev}
                 disabled={step === 0}
+                style={{ visibility: step === 0 ? "hidden" : "visible" }}
               >
                 ← Back
               </button>

@@ -6,14 +6,24 @@ export function NetworkStatus() {
   const { data, isError, isLoading } = useQuery({
     queryKey: ["networkStatus"],
     queryFn: async () => {
-      const res = await fetch("/api/backend/health.check", {
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      const json = await res.json();
-      return json?.result?.data ?? json?.data ?? json;
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 3000);
+      try {
+        const res = await fetch("/api/backend/health.check", {
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+        });
+        clearTimeout(id);
+        if (!res.ok) throw new Error(String(res.status));
+        const json = await res.json();
+        return json?.result?.data ?? json?.data ?? json;
+      } catch (err) {
+        clearTimeout(id);
+        throw err;
+      }
     },
     refetchInterval: 15_000,
+    retry: false,
   });
 
   const status = isLoading ? "checking" : isError ? "offline" : "online";
@@ -28,7 +38,7 @@ export function NetworkStatus() {
 
   const label =
     status === "online"
-      ? "Hokage Network · Online"
+      ? "Live"
       : status === "offline"
         ? "Network · Offline"
         : "Connecting…";

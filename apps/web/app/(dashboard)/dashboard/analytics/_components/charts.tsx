@@ -288,3 +288,101 @@ export function BarList({
     </ul>
   );
 }
+
+/* ------------------------------------------------------------------
+   Donut chart — for choice distributions (pie/bar chart substitute)
+   ------------------------------------------------------------------ */
+export function DonutChart({
+  items,
+  emptyLabel,
+}: {
+  items: { label: string; count: number }[];
+  emptyLabel: string;
+}) {
+  if (items.length === 0) {
+    return (
+      <p className="text-center text-[11px] uppercase tracking-[0.25em] text-muted-foreground/70 py-6">
+        {emptyLabel}
+      </p>
+    );
+  }
+
+  const total = items.reduce((sum, item) => sum + item.count, 0);
+  const colors = [
+    "#FF6B00", // konoha-orange
+    "#00D4FF", // chakra
+    "#FFD700", // gold
+    "#DC143C", // crimson
+    "#32CD32", // green
+    "#8A2BE2", // purple
+    "#FF1493", // pink
+  ];
+
+  let currentOffset = 0;
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center gap-6">
+      {/* SVG Donut */}
+      <div className="relative w-32 h-32 shrink-0">
+        <svg viewBox="0 0 40 40" className="w-full h-full -rotate-90 transform">
+          {items.map((item, i) => {
+            const pct = (item.count / total) * 100;
+            // The circumference of a circle with r=15.9155 is ~100
+            const strokeDasharray = `${pct} ${100 - pct}`;
+            const strokeDashoffset = -currentOffset;
+            currentOffset += pct;
+
+            return (
+              <circle
+                key={i}
+                cx="20"
+                cy="20"
+                r="15.91549430918954"
+                fill="transparent"
+                stroke={colors[i % colors.length]}
+                strokeWidth="6"
+                strokeDasharray={strokeDasharray}
+                strokeDashoffset={strokeDashoffset}
+                className="transition-all duration-500 hover:opacity-80 cursor-pointer"
+              >
+                <title>{`${item.label}: ${item.count} (${Math.round(pct)}%)`}</title>
+              </circle>
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center flex-col leading-none">
+          <span className="font-heading text-lg font-black text-foreground">{total}</span>
+          <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground mt-0.5">Total</span>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex-1 w-full space-y-2">
+        {items.map((item, i) => {
+          const pct = Math.round((item.count / total) * 100);
+          return (
+            <div key={i} className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <span
+                  className="w-2.5 h-2.5 rounded-sm shrink-0"
+                  style={{ backgroundColor: colors[i % colors.length] }}
+                />
+                <span className="truncate text-muted-foreground" title={item.label}>
+                  {item.label}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-mono text-[10px] text-muted-foreground/60 w-8 text-right">
+                  {pct}%
+                </span>
+                <span className="font-mono text-[11px] text-konoha-orange w-6 text-right">
+                  {item.count}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

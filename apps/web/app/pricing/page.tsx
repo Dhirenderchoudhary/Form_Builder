@@ -1,12 +1,9 @@
+"use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-
-export const metadata = {
-  title: "Pricing | Konoha Form Scrolls",
-  description: "Simple, transparent pricing for your form building needs.",
-};
 
 const TIERS = [
   {
@@ -61,13 +58,15 @@ const TIERS = [
 ];
 
 export default function PricingPage() {
+  const [isAnnual, setIsAnnual] = useState(false);
+
   return (
     <div className="min-h-screen bg-background selection:bg-konoha-orange/20 selection:text-konoha-orange">
       <Header />
       
       <main className="pt-32 pb-24">
         <div className="container mx-auto px-6 max-w-6xl">
-          <div className="text-center space-y-4 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="text-center space-y-4 mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <h1 className="font-heading text-4xl md:text-6xl font-black uppercase tracking-tight">
               Invest in your <span className="text-konoha-orange">Jutsu</span>
             </h1>
@@ -76,8 +75,36 @@ export default function PricingPage() {
             </p>
           </div>
 
+          <div className="flex justify-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
+            <div className="flex items-center gap-3 bg-secondary/50 rounded-full p-1 border border-border/50">
+              <button
+                type="button"
+                onClick={() => setIsAnnual(false)}
+                className={`px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all ${!isAnnual ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAnnual(true)}
+                className={`px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${isAnnual ? "bg-background shadow-sm text-konoha-orange" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Annually
+                <span className="bg-konoha-orange/20 text-konoha-orange text-[10px] px-2 py-0.5 rounded-full">Save 20%</span>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            {TIERS.map((tier, i) => (
+            {TIERS.map((tier, i) => {
+              // Calculate price based on toggle
+              const priceNum = tier.price === "$0" ? 0 : parseInt(tier.price.replace("$", ""));
+              const displayPrice = isAnnual && priceNum > 0 
+                ? `$${Math.round(priceNum * 12 * 0.8)}` 
+                : tier.price;
+              const displayPeriod = isAnnual && priceNum > 0 ? "/yr" : tier.period;
+
+              return (
               <div 
                 key={tier.name}
                 className={`relative rounded-2xl border bg-card/50 backdrop-blur-sm p-8 flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both ${
@@ -97,9 +124,14 @@ export default function PricingPage() {
                 
                 <div className="mb-6">
                   <h3 className="font-heading text-xl font-bold uppercase tracking-wide mb-2">{tier.name}</h3>
-                  <div className="flex items-baseline gap-1 mb-3">
-                    <span className="text-4xl font-black">{tier.price}</span>
-                    {tier.period && <span className="text-muted-foreground">{tier.period}</span>}
+                  <div className="flex flex-col items-start mb-3">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black">{displayPrice}</span>
+                      {displayPeriod && <span className="text-muted-foreground">{displayPeriod}</span>}
+                    </div>
+                    {isAnnual && priceNum > 0 && (
+                      <span className="text-xs text-konoha-orange/80 mt-1 uppercase tracking-wider font-medium">Billed annually</span>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">{tier.description}</p>
                 </div>
@@ -125,7 +157,8 @@ export default function PricingPage() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </main>

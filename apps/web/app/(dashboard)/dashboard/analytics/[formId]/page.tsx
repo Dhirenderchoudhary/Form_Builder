@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { KpiRow } from "../_components/kpi-row";
-import { DailyTrendChart, Funnel, BarList } from "../_components/charts";
+import { DailyTrendChart, Funnel, BarList, DonutChart } from "../_components/charts";
 import { ResponsesTable } from "../_components/responses-table";
 import { CsvExport } from "../_components/csv-export";
 
@@ -314,7 +314,7 @@ function FieldAnalytics({ formId }: { formId: string }) {
           <p className="mb-4 text-[12px] font-semibold text-foreground truncate" title={field.label}>
             {field.label}
           </p>
-          <BarList
+          <DonutChart
             items={field.data.map((d: any) => ({
               label: d.choice,
               count: d.count,

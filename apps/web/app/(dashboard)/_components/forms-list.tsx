@@ -480,7 +480,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       </div>
       <div>
         <h3 className="font-heading text-lg font-bold tracking-wide">
-          No scrolls forged yet
+          No scrolls yet - forge one
         </h3>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
           Your archive is empty. Choose a destination, sketch the mission, and

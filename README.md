@@ -33,7 +33,7 @@
 > [!NOTE]
 > **Demo Credentials (for Judges & Testing):**
 > - **Email:** `demo@konoha.com`
-> - **Password:** `Naruto@123`
+> - **Password:** `Konoha!Demo2024$`
 >
 > *(You can also click "Try Sandbox Demo" on the landing page to instantly log in without entering credentials!)*
 

@@ -125,12 +125,12 @@ export default async function HomePage() {
             </div>
 
             <h1 className="font-heading text-4xl font-black leading-[0.95] tracking-tight sm:text-5xl md:text-6xl lg:text-[5.5rem]">
-              <span className="block text-foreground/90">Forms</span>
+              <span className="block text-foreground/90">{"Forms "}</span>
               <span className="block">
-                forged with the
+                {"forged with the "}
               </span>
               <span className="block bg-gradient-to-r from-konoha-orange via-konoha-gold to-konoha-orange bg-clip-text text-transparent text-glow-orange">
-                Will of Fire.
+                {"Will of Fire."}
               </span>
             </h1>
 
@@ -153,15 +153,16 @@ export default async function HomePage() {
                 </Link>
               ) : (
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                  <SignUpButton mode="modal">
-                    <Button
-                      size="lg"
-                      className="btn-rasengan w-full gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
-                    >
+                  <Button
+                    asChild
+                    size="lg"
+                    className="btn-rasengan w-full sm:w-auto gap-2 bg-gradient-to-br from-konoha-orange to-[#cc4400] font-heading uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(255,107,0,0.35)] hover:shadow-[0_0_50px_rgba(255,107,0,0.5)]"
+                  >
+                    <Link href="/sign-up">
                       Begin training
                       <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </SignUpButton>
+                    </Link>
+                  </Button>
 
                   <Link href="/api/demo-login" className="w-full sm:w-auto">
                     <Button
@@ -187,13 +188,14 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-            
-            {!isSignedIn && (
-              <p className="mt-2 text-[11px] uppercase tracking-[0.1em] text-konoha-gold">
-                Demo Credentials: demo@konohaforms.com / konoha123
-              </p>
-            )}
 
+            {!isSignedIn && (
+              <div className="mt-6 flex flex-col items-center sm:items-start text-xs border border-konoha-forest/30 bg-konoha-ink/40 rounded p-3 w-fit">
+                <p className="text-muted-foreground font-medium uppercase tracking-widest mb-1 text-[10px]">Judges & Testing Credentials</p>
+                <p className="text-foreground"><span className="text-konoha-orange">Email:</span> demo@konoha.com</p>
+                <p className="text-foreground"><span className="text-konoha-orange">Pass:</span> Konoha!Demo2024$</p>
+              </div>
+            )}
             <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
               {oaths.map((item) => (
                 <li
@@ -433,10 +435,6 @@ export default async function HomePage() {
                     </Button>
                   </Link>
                 </div>
-                
-                <p className="text-[11px] uppercase tracking-[0.1em] text-konoha-gold text-center opacity-80">
-                  Demo Credentials: demo@konohaforms.com / konoha123
-                </p>
               </div>
             )}
           </div>
@@ -460,9 +458,9 @@ export default async function HomePage() {
             <CreatorCredits />
           </div>
           <nav className="flex gap-5">
-            <a href="#" className="hover:text-konoha-orange">Privacy</a>
-            <a href="#" className="hover:text-konoha-orange">Terms</a>
-            <a href="#" className="hover:text-konoha-orange">Contact</a>
+            <Link href="/privacy" className="hover:text-konoha-orange">Privacy</Link>
+            <Link href="/terms" className="hover:text-konoha-orange">Terms</Link>
+            <a href="mailto:support@konohaforms.com" className="hover:text-konoha-orange">Contact</a>
           </nav>
         </div>
       </footer>

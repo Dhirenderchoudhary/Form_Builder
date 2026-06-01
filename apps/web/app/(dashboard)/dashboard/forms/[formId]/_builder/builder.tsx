@@ -22,6 +22,7 @@ import { FieldInspector } from "./inspector";
 import { FormSettings } from "./form-settings";
 import { FieldPreview } from "./field-preview";
 import { getFieldDefaults, getFieldDef } from "./field-catalog";
+import { SharePopover } from "./share-popover";
 import type { BuilderField, BuilderForm, FieldType } from "./types";
 
 interface Props {
@@ -527,31 +528,7 @@ export function Builder({ formId }: Props) {
         {/* Publish / link actions */}
         {isPublished ? (
           <>
-            <button
-              type="button"
-              onClick={() => {
-                const url = `${window.location.origin}/f/${form.slug}`;
-                navigator.clipboard
-                  .writeText(url)
-                  .then(() =>
-                    toast.push({
-                      variant: "success",
-                      title: "Link copied",
-                      message: url.replace(window.location.origin, ""),
-                    }),
-                  )
-                  .catch(() =>
-                    toast.push({
-                      variant: "error",
-                      title: "Clipboard blocked",
-                    }),
-                  );
-              }}
-              className="hidden h-9 items-center gap-2 rounded-md border border-konoha-forest/60 px-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:border-konoha-orange hover:text-konoha-orange md:flex"
-            >
-              <Link2 className="h-3.5 w-3.5" />
-              Copy link
-            </button>
+            <SharePopover formId={formId} slug={form.slug} />
             <a
               href={`/f/${form.slug}`}
               target="_blank"

@@ -113,9 +113,15 @@ export const publicRouter = router({
         summary: "Submit a response to a published form (no auth required)",
       },
     })
-    .input(submitResponseSchema.extend({ password: z.string().optional() }))
+    .input(submitResponseSchema.extend({ password: z.string().optional(), _honeypot: z.string().optional() }))
     .output(z.object({ responseId: z.string().uuid(), message: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // Honeypot check: Bots will usually fill out this visually hidden field.
+      // Eject early with a fake success to fool the spam bot.
+      if (input._honeypot) {
+        return { responseId: crypto.randomUUID(), message: "Submission successful" };
+      }
+
       const ip = ctx.ipAddress ?? "unknown_ip";
       
       // Robust sliding-window rate limiting via Redis

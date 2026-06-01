@@ -48,6 +48,7 @@ export function FormView({ slug }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [password, setPassword] = useState<string | null>(null);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
+  const [honeypot, setHoneypot] = useState("");
 
   const startedRef = useRef(false);
   const startTimeRef = useRef<number>(Date.now());
@@ -241,6 +242,7 @@ export function FormView({ slug }: Props) {
       slug,
       answers,
       password: password ?? undefined,
+      _honeypot: honeypot ? honeypot : undefined,
       completionTimeMs: Date.now() - startTimeRef.current,
       metadata: {
         referer:
@@ -387,6 +389,20 @@ export function FormView({ slug }: Props) {
 
       {/* Form */}
       <form onSubmit={handleSubmit} noValidate className="scroll-card p-4 sm:p-6 md:p-10">
+        {/* Honeypot field - visually hidden but accessible to bots */}
+        <div style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0, zIndex: -1 }} aria-hidden="true">
+          <label htmlFor={`_hp_${form.id}`}>Name (Do not fill this out if you are human)</label>
+          <input
+            id={`_hp_${form.id}`}
+            name={`_hp_${form.id}`}
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+          />
+        </div>
+
         <div className="space-y-6">
           {fieldsToRender.map((field) => {
             const error = errors[field.id];

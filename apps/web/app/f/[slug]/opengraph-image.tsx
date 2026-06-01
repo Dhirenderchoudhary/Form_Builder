@@ -1,5 +1,4 @@
 import { ImageResponse } from "next/og";
-import { db, formsTable, eq } from "@repo/database";
 
 export const runtime = "nodejs";
 
@@ -17,6 +16,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
   let formDescription = "Submit your answers to this mission scroll.";
 
   try {
+    const { db, formsTable, eq } = await import("@repo/database");
     const forms = await db
       .select({ title: formsTable.title, description: formsTable.description })
       .from(formsTable)

@@ -212,6 +212,15 @@ export function FormSettings({ form, onChange }: Props) {
             Automatically seal the scroll after this date.
           </p>
         </label>
+
+        <Toggle
+          label="One response per person"
+          description="Block duplicate submissions from the same shinobi"
+          checked={!!form.settings?.oneResponsePerIp}
+          onChange={(v) =>
+            onChange({ settings: { ...form.settings, oneResponsePerIp: v } })
+          }
+        />
       </div>
 
       <div className="flex flex-col gap-4 border-t border-konoha-forest/30 pt-4">

@@ -67,6 +67,7 @@ export interface PublicForm {
   themeId: string | null;
   settings: {
     showProgressBar?: boolean;
+    oneResponsePerIp?: boolean;
   } | null;
   fields: PublicField[];
 }

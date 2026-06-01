@@ -46,12 +46,23 @@ export function FormView({ slug }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [password, setPassword] = useState<string | null>(null);
   const [currentPageIdx, setCurrentPageIdx] = useState(0);
   const [honeypot, setHoneypot] = useState("");
 
   const startedRef = useRef(false);
   const startTimeRef = useRef<number>(Date.now());
+
+  // Check localStorage for previous submission
+  useEffect(() => {
+    try {
+      const key = `konoha_submitted_${slug}`;
+      if (localStorage.getItem(key)) {
+        setAlreadySubmitted(true);
+      }
+    } catch {}
+  }, [slug]);
 
   const formQuery = trpc.public.getForm.useQuery({
     slug,
@@ -139,6 +150,10 @@ export function FormView({ slug }: Props) {
   const submit = trpc.public.submit.useMutation({
     onSuccess: () => {
       setSubmitted(true);
+      // Mark as submitted in localStorage to block duplicates
+      try {
+        localStorage.setItem(`konoha_submitted_${slug}`, Date.now().toString());
+      } catch {}
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     },
     onError: (err) => {
@@ -300,6 +315,33 @@ export function FormView({ slug }: Props) {
       title={title}
       description={desc}
     />;
+  }
+
+  // ----- Already submitted (localStorage check) -----
+  if (alreadySubmitted && state.kind === "ok" && state.form.settings?.oneResponsePerIp) {
+    return (
+      <div className="relative mx-auto max-w-2xl px-4 py-16 md:py-24">
+        <div className="scroll-card relative overflow-hidden p-8 text-center md:p-12">
+          <div className="mx-auto mb-6 w-16 animate-chakra-pulse">
+            <KonohaLeaf size={64} color="#00D4FF" glow />
+          </div>
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.4em] text-konoha-chakra">
+            Already Submitted · 提出済み
+          </p>
+          <h1 className="font-heading text-3xl font-black text-konoha-chakra md:text-4xl">
+            You've already responded.
+          </h1>
+          <div className="mx-auto mt-4 h-px w-24 bg-konoha-chakra/40" />
+          <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-muted-foreground md:text-base">
+            Your scroll has already been delivered to the Hokage's office. Each shinobi can only respond once.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+            <CheckCircle2 className="h-3.5 w-3.5 text-konoha-chakra" />
+            Response recorded
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // ----- Success -----

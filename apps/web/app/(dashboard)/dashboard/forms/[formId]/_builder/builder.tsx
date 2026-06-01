@@ -36,7 +36,7 @@ export function Builder({ formId }: Props) {
   const toast = useToast();
   const utils = trpc.useUtils();
 
-  const { data: serverForm, isLoading, isError } = trpc.forms.get.useQuery({ formId });
+  const { data: serverForm, isLoading, isError, error } = trpc.forms.get.useQuery({ formId });
 
   // Local mirror of the form so the UI stays snappy while mutations fly.
   const [form, setForm] = useState<BuilderForm | null>(null);
@@ -456,7 +456,25 @@ export function Builder({ formId }: Props) {
     );
   }
 
-  if (isError || !form) {
+  if (isError) {
+    const trpcError = trpc.forms.get.useQuery({ formId }).error;
+    return (
+      <div className="scroll-card p-12 text-center">
+        <p className="text-sm text-konoha-akatsuki">
+          {trpcError?.message ?? "Failed to load scroll. The network may be unstable or the scroll was destroyed."}
+        </p>
+        <Link
+          href="/dashboard/forms"
+          className="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-konoha-orange hover:text-konoha-gold"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to archive
+        </Link>
+      </div>
+    );
+  }
+
+  if (!form) {
     return (
       <div className="scroll-card p-12 text-center">
         <p className="text-sm text-konoha-akatsuki">Scroll not found.</p>

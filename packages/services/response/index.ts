@@ -280,7 +280,7 @@ export class ResponseService extends BaseService {
     
     if (!result.success) {
       // Pick the first error to throw as a bad request
-      const firstError = result.error.errors[0];
+      const firstError = result.error.issues[0];
       this.badRequest(firstError?.message ?? "Invalid response data");
     }
   }

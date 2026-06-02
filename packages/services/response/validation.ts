@@ -9,7 +9,7 @@ export function buildResponseValidator(fields: SelectFormField[]) {
     let fieldSchema: z.ZodTypeAny;
     const v = field.validations;
 
-    if (field.type === "number") {
+    if (field.type === "number" || field.type === "rating" || field.type === "scale") {
       let numSchema = z.number({
         message: `"${field.label}" must be a number`,
       });
@@ -51,7 +51,7 @@ export function buildResponseValidator(fields: SelectFormField[]) {
     } else {
       if (field.type === "checkbox") {
         fieldSchema = (fieldSchema as z.ZodArray<any>).min(1, `"${field.label}" is required`);
-      } else if (field.type !== "number") {
+      } else if (field.type !== "number" && field.type !== "rating" && field.type !== "scale") {
         fieldSchema = (fieldSchema as z.ZodString).min(1, `"${field.label}" is required`);
       }
     }

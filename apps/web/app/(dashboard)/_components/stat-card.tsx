@@ -66,7 +66,7 @@ export function StatCard({
           <div className="h-8 w-16 animate-pulse rounded bg-konoha-forest/40" />
         ) : (
           <span
-            className={`font-heading text-3xl font-black tabular-nums leading-none ${a.valueColor}`}
+            className={`text-3xl font-black tabular-nums leading-none ${a.valueColor}`}
           >
             {value}
           </span>

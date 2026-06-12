@@ -39,7 +39,7 @@ export function Builder({ formId }: Props) {
   const { data: serverForm, isLoading, isError, error } = trpc.forms.get.useQuery({ formId });
 
   // Local mirror of the form so the UI stays snappy while mutations fly.
-  const [form, setForm] = useState<BuilderForm | null>(null);
+  const [form, setForm] = useState<BuilderForm | null>((serverForm as BuilderForm) || null);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [rightPane, setRightPane] = useState<RightPane>("settings");
   const [previewMode, setPreviewMode] = useState(false);

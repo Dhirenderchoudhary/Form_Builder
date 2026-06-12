@@ -214,7 +214,7 @@ export function Funnel({
               </div>
               <div className="text-right">
                 <p
-                  className="font-heading text-xl font-black tabular-nums leading-none"
+                  className="text-xl font-black tabular-nums leading-none"
                   style={{ color: s.color }}
                 >
                   {s.value.toLocaleString()}
@@ -351,7 +351,7 @@ export function DonutChart({
           })}
         </svg>
         <div className="absolute inset-0 flex items-center justify-center flex-col leading-none">
-          <span className="font-heading text-lg font-black text-foreground">{total}</span>
+          <span className="text-lg font-black text-foreground">{total}</span>
           <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground mt-0.5">Total</span>
         </div>
       </div>

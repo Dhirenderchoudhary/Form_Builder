@@ -101,7 +101,7 @@ export function KpiRow({ summary, loading }: { summary?: Summary; loading?: bool
             {loading ? (
               <div className="h-7 w-16 animate-pulse rounded bg-konoha-forest/40" />
             ) : (
-              <p className={`font-heading text-2xl font-black tabular-nums leading-none ${a.valueColor}`}>
+              <p className={`text-2xl font-black tabular-nums leading-none ${a.valueColor}`}>
                 {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
               </p>
             )}

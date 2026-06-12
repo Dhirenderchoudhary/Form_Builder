@@ -42,6 +42,9 @@ importers:
       '@scalar/express-api-reference':
         specifier: ^0.8.30
         version: 0.8.48
+      '@swc/core':
+        specifier: ^1.15.8
+        version: 1.15.33
       '@trpc/server':
         specifier: ^11.8.1
         version: 11.17.0(typescript@5.9.3)
@@ -54,6 +57,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.6
+      dotenv-cli:
+        specifier: ^11.0.0
+        version: 11.0.0
       express:
         specifier: ^5.2.1
         version: 5.2.1
@@ -81,6 +87,15 @@ importers:
       trpc-to-openapi:
         specifier: ^3.1.0
         version: 3.2.0(@trpc/server@11.17.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.4.3))(zod@4.4.3)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(@swc/core@1.15.33)(jiti@1.21.7)(postcss@8.5.15)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.0)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.22.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
       uuid:
         specifier: ^14.0.0
         version: 14.0.0
@@ -94,9 +109,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      '@swc/core':
-        specifier: ^1.15.8
-        version: 1.15.33
       '@types/compression':
         specifier: ^1.8.1
         version: 1.8.1
@@ -118,18 +130,6 @@ importers:
       '@types/uuid':
         specifier: ^11.0.0
         version: 11.0.0
-      dotenv-cli:
-        specifier: ^11.0.0
-        version: 11.0.0
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.33)(jiti@1.21.7)(postcss@8.5.15)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.0)
-      tsx:
-        specifier: ^4.21.0
-        version: 4.22.3
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
 
   apps/web:
     dependencies:

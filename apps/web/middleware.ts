@@ -4,6 +4,12 @@ const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
+    // Check for demo session cookie to allow sandbox bypass
+    const hasDemoCookie = req.cookies.get("demo_session")?.value === "true";
+    if (hasDemoCookie) {
+      return;
+    }
+
     const url = new URL(req.url);
     await auth.protect({
       unauthenticatedUrl: `${url.origin}/sign-in?redirect_url=${encodeURIComponent(url.pathname + url.search)}`,

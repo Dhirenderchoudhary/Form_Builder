@@ -24,6 +24,7 @@ import {
   SageMarks,
 } from "@/components/konoha/illustrations";
 import { CreatorCredits } from "@/components/creator-credits";
+import { TestingCredentials } from "@/components/testing-credentials";
 
 import { NetworkStatus } from "@/components/konoha/network-status";
 
@@ -190,11 +191,7 @@ export default async function HomePage() {
             </div>
 
             {!isSignedIn && (
-              <div className="mt-6 flex flex-col items-center sm:items-start text-xs border border-konoha-forest/30 bg-konoha-ink/40 rounded p-3 w-fit">
-                <p className="text-muted-foreground font-medium uppercase tracking-widest mb-1 text-[10px]">Judges & Testing Credentials</p>
-                <p className="text-foreground"><span className="text-konoha-orange">Email:</span> demo@konoha.com</p>
-                <p className="text-foreground"><span className="text-konoha-orange">Pass:</span> Konoha!Demo2024$</p>
-              </div>
+              <TestingCredentials />
             )}
             <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
               {oaths.map((item) => (

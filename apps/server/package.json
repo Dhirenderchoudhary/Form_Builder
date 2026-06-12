@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "dotenv -e ../../.env -- tsx watch ./src/index.ts",
-    "build": "tsup",
+    "build": "pnpm exec tsup",
     "lint": "true"
   },
   "devDependencies": {

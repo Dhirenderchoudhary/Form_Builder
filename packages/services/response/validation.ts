@@ -16,9 +16,13 @@ export function buildResponseValidator(fields: SelectFormField[]) {
       if (v?.min !== undefined) numSchema = numSchema.min(v.min, `"${field.label}" must be at least ${v.min}`);
       if (v?.max !== undefined) numSchema = numSchema.max(v.max, `"${field.label}" must be at most ${v.max}`);
       fieldSchema = numSchema;
-    } else if (field.type === "checkbox") {
+    } else if (field.type === "multi_select") {
       fieldSchema = z.array(z.string(), {
         message: `"${field.label}" must be a list of choices`,
+      });
+    } else if (field.type === "checkbox") {
+      fieldSchema = z.boolean({
+        message: `"${field.label}" must be a boolean`,
       });
     } else {
       let strSchema = z.string({
@@ -43,15 +47,20 @@ export function buildResponseValidator(fields: SelectFormField[]) {
     }
 
     if (!field.required) {
-      if (field.type === "checkbox") {
+      if (field.type === "checkbox" || field.type === "multi_select") {
         fieldSchema = fieldSchema.optional();
       } else {
         fieldSchema = fieldSchema.optional().or(z.literal(""));
       }
     } else {
-      if (field.type === "checkbox") {
+      if (field.type === "multi_select") {
         fieldSchema = (fieldSchema as z.ZodArray<any>).min(1, `"${field.label}" is required`);
-      } else if (field.type !== "number" && field.type !== "rating" && field.type !== "scale") {
+      } else if (
+        field.type !== "number" && 
+        field.type !== "rating" && 
+        field.type !== "scale" && 
+        field.type !== "checkbox"
+      ) {
         fieldSchema = (fieldSchema as z.ZodString).min(1, `"${field.label}" is required`);
       }
     }
